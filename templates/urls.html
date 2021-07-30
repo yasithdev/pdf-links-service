@@ -50,7 +50,8 @@
         </thead>
         {% for url in urls %}
         <tr>
-          <td class="w-100" style="white-space: nowrap; text-overflow:ellipsis; overflow: hidden; max-width:0;">{{url}}
+          <td class="w-100" style="white-space: nowrap; text-overflow:ellipsis; overflow: hidden; max-width:0;">
+            <a target="_blank" href='{{url}}'>{{url}}</a>
           </td>
           <td>
             <button
