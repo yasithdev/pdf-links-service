@@ -24,7 +24,9 @@
               })
               break;
             }
-            document.getElementById("log").innerHTML += decoder.decode(value);
+            let text = decoder.decode(value);
+            text = text.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            document.getElementById("log").innerHTML += text;
           }
         })
     }
@@ -79,13 +81,13 @@
     <div class="col-6">
       <h2>Robustify Log</h2>
       <p>This section will display the log for link robustification.</p>
-      <pre class="w-100 h-100" id="log"
+      <pre class="w-100 h-100"
            style="border: 1px solid black;
            word-wrap: break-word;
            white-space: pre-wrap;
            overflow-x: auto;
            overflow-y: scroll;
-           max-height: 80vh;"></pre>
+           max-height: 80vh;"><code id="log" style="font-size: 0.7em; background-color: #EEEEEE;"></code></pre>
     </div>
   </div>
 </div>
