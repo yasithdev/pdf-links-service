@@ -83,6 +83,7 @@
           <button
             type="button"
             class="btn btn-success btn-sm float-end"
+            style="font-size:0.6rem;"
             onclick='window.copyToClipboard(${cp_href_uri_r})'>Copy</button></td>
       </tr>
       <tr>
@@ -92,6 +93,7 @@
         <button
           type="button"
           class="btn btn-success btn-sm float-end"
+          style="font-size:0.6rem;"
           onclick='window.copyToClipboard(${cp_href_uri_m})'>Copy</button></td>
       </tr>
     </tbody>
@@ -186,7 +188,7 @@
       <p>This section will display the log for link robustification.</p>
       <div class="w-100 h-100 p-2 small"
            id="log"
-           style="border:1px solid black;max-height:80vh;"></div>
+           style="border:1px solid black;max-height:80vh;overflow-y:scroll"></div>
     </div>
   </div>
   <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
