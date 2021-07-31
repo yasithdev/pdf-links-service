@@ -62,12 +62,12 @@
             // incremental update
             const res = JSON.parse(decoder.decode(value).trim());
             const uri = res['uri'];
-            const href_uri_r = res['href_uri_r'].replaceAll(/[\s\n]+/g, " ");
-            const cp_href_uri_r = "`" + href_uri_r.replaceAll("'", '"') + "`";
-            const href_uri_m = res['href_uri_m'].replaceAll(/[\s\n]+/g, " ");
-            const cp_href_uri_m = "`" + href_uri_m.replaceAll("'", '"') + "`";
             let text = "";
             if (res['ok']) {
+              const href_uri_r = res['href_uri_r'].replaceAll(/[\s\n]+/g, " ");
+              const cp_href_uri_r = "`" + href_uri_r.replaceAll("'", '"') + "`";
+              const href_uri_m = res['href_uri_m'].replaceAll(/[\s\n]+/g, " ");
+              const cp_href_uri_m = "`" + href_uri_m.replaceAll("'", '"') + "`";
               text = String.raw`
 <div class="card mb-2">
   <div class="card-header px-2 bg-success text-white">
@@ -102,6 +102,7 @@
 </div>`;
               successUris.push(uri);
             } else {
+              const err = res['error'];
               text = String.raw`
 <div class="card mb-2">
   <div class="card-header px-2 bg-warning text-white">
@@ -112,7 +113,7 @@
     <tbody>
       <tr>
         <td style="width:4em;"><b>Error:</b></td>
-        <td>${res['error']}</td>
+        <td>${err}</td>
       </tr>
     </tbody>
     </table>
