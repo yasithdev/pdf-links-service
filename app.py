@@ -48,14 +48,33 @@ def extract_links(fp: str):
 
 @app.route("/robustify", methods=['POST'])
 def robustify():
-  urls = request.get_json()
+  uris = request.get_json()
 
   def generate():
-    for url in urls:
-      yield f"Started: {url}\n"
-      res = requests.get(f"http://robustlinks.mementoweb.org/api/", {"url": url.strip()})
-      yield f"Processed: {url}\n"
-      yield f"{json.dumps(res.json())}\n"
+    for uri in uris:
+      uri = uri.strip()
+      res = requests.get(f"http://robustlinks.mementoweb.org/api/", {"url": uri})
+      try:
+        res_json = res.json()
+        if 'robust_links_html' in res_json:
+          yield json.dumps({
+            "ok": True,
+            "uri": uri,
+            "href_uri_r": res_json['robust_links_html']['original_url_as_href'],
+            "href_uri_m": res_json['robust_links_html']['memento_url_as_href'],
+          }) + "\n"
+        elif 'friendly error' in res_json:
+          yield json.dumps({
+            "ok": False,
+            "uri": uri,
+            "error": res_json['friendly error'].strip()
+          }) + "\n"
+      except json.JSONDecodeError:
+        yield json.dumps({
+          "ok": False,
+          "uri": uri,
+          "error": f"Did not receive JSON output for URI {uri}"
+        }) + "\n"
 
   return app.response_class(generate(), content_type='application/octet-stream')
 
