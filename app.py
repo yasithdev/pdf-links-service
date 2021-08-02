@@ -79,6 +79,16 @@ def robustify():
   return app.response_class(generate(), content_type='application/octet-stream')
 
 
-@app.route("/")
+@app.route("/ldn", methods=['POST'])
+def send_ldn():
+  # get JSON payload
+  payload = request.get_json()
+  to: str = payload['to']
+  message = payload['message']
+  #
+  link_header = request.headers.get("Link")
+
+
+@app.route("/", methods=['GET'])
 def main_page():
   return render_template("index.html")

@@ -1,215 +1,77 @@
 <!DOCTYPE html>
 <head>
+  <!-- title -->
   <title>PDF Links Service</title>
-  <link crossorigin="anonymous"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-        rel="stylesheet">
-  <script crossorigin="anonymous"
-          integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- clipboard copy script -->
-  <script>
-    // source: https://stackoverflow.com/questions/51805395/navigator-clipboard-is-undefined
-    window.copyToClipboard = function (textToCopy) {
-      const showToast = () => new bootstrap.Toast(document.getElementById("copiedToast")).show();
-      // navigator clipboard api needs a secure context (https)
-      if (navigator.clipboard && window.isSecureContext) {
-        // navigator clipboard api method'
-        return navigator.clipboard.writeText(textToCopy).then(showToast);
-      } else {
-        // text area method
-        let textArea = document.createElement("textarea");
-        textArea.value = textToCopy;
-        // make the textarea out of viewport
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        return new Promise((res, rej) => {
-          // here the magic happens
-          document.execCommand('copy') ? res() : rej();
-          textArea.remove();
-        }).then(showToast);
-      }
-    }
-  </script>
-  <!-- robustify script -->
-  <script>
-    window.robustify = function (target) {
-      // declare element variables
-      const logEl = document.getElementById("log");
-      const progressEl = document.getElementById("progress");
-      const spinnerEl = document.getElementById("spinner");
-      const urlEls = [...document.getElementsByName("url").values()];
-      // initialize state variables / functions
-      const decoder = new TextDecoder('utf-8');
-      const urls = JSON.parse(target.dataset.urls);
-      const passUrls = [];
-      const failUrls = [];
-      const updateProgress = () => progressEl.innerHTML = `Pass: ${passUrls.length}, Fail: ${failUrls.length}, Total: ${urls.length}`;
-      // initialize UI
-      logEl.innerHTML = "";
-      urlEls.forEach(e => e.setAttribute("disabled", ""));
-      spinnerEl.classList.toggle("d-none", false);
-      updateProgress();
-      // call the robustify API
-      fetch("/robustify", {
-        method: "post",
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(urls)
-      })
-        .then(response => response.body.getReader())
-        .then(async reader => {
-          while (true) {
-            const {done, value} = await reader.read();
-            if (done) {
-              // final update
-              urlEls.forEach(e => e.removeAttribute("disabled"));
-              spinnerEl.classList.toggle("d-none", true);
-              updateProgress();
-              break;
-            }
-            // incremental update
-            const res = JSON.parse(decoder.decode(value).trim());
-            const uri = res['uri'];
-            let text = "";
-            if (res['ok']) {
-              const href_uri_r = res['href_uri_r'].replaceAll(/[\s\n]+/g, " ");
-              const cp_href_uri_r = "`" + href_uri_r.replaceAll("'", '"') + "`";
-              const href_uri_m = res['href_uri_m'].replaceAll(/[\s\n]+/g, " ");
-              const cp_href_uri_m = "`" + href_uri_m.replaceAll("'", '"') + "`";
-              text = String.raw`
-<div class="card mb-2">
-  <div class="card-header px-2 bg-success text-white">
-    <b style="white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0;">${uri}</b>
-  </div>
-  <div class="card-body p-2">
-    <table class="card-text w-100">
-    <tbody>
-      <tr>
-        <td style="width:4em;"><b>URI-R:</b></td>
-        <td>${href_uri_r}</td>
-        <td style="width: 4em;">
-          <button
-            type="button"
-            class="btn btn-success btn-sm float-end"
-            style="font-size:0.6rem;"
-            onclick='window.copyToClipboard(${cp_href_uri_r})'>Copy</button></td>
-      </tr>
-      <tr>
-        <td style="width:4em;"><b>URI-M:</b></td>
-        <td>${href_uri_m}</td>
-        <td style="width: 4em;">
-        <button
-          type="button"
-          class="btn btn-success btn-sm float-end"
-          style="font-size:0.6rem;"
-          onclick='window.copyToClipboard(${cp_href_uri_m})'>Copy</button></td>
-      </tr>
-    </tbody>
-    </table>
-  </div>
-</div>`;
-              passUrls.push(uri);
-            } else {
-              const err = res['error'];
-              text = String.raw`
-<div class="card mb-2">
-  <div class="card-header px-2 bg-warning text-white">
-    <b>${uri}</b>
-  </div>
-  <div class="card-body p-2">
-    <table class="card-text w-100">
-    <tbody>
-      <tr>
-        <td style="width:4em;"><b>Error:</b></td>
-        <td>${err}</td>
-      </tr>
-    </tbody>
-    </table>
-  </div>
-</div>`;
-              failUrls.push(uri);
-            }
-            logEl.innerHTML += text;
-            updateProgress();
-
-            urlEls.filter(e => JSON.parse(e.dataset.urls).every(u => passUrls.includes(u)))
-              .forEach(e => e.classList.replace("btn-primary", "btn-success"));
-            urlEls.filter(e => JSON.parse(e.dataset.urls).some(u => failUrls.includes(u)))
-              .forEach(e => {
-                e.classList.replace("btn-primary", "btn-warning");
-                e.classList.replace("btn-success", "btn-warning");
-              });
-          }
-        })
-    }
-  </script>
+  <!-- meta -->
+  <meta charset="UTF-8">
+  <meta content="width=device-width,initial-scale=1.0" name="viewport">
+  <!-- css -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{url_for('static',filename='style.css')}}" rel="stylesheet">
+  <!-- js -->
+  <script rel="script" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script rel="script" src="{{url_for('static',filename='robustify.js')}}"></script>
 </head>
 <body>
 <nav class="navbar navbar-dark bg-dark mb-2">
   <a class="navbar-brand ms-2" href="/">PDF Links Service</a>
 </nav>
 <div class="container">
-  <div class="row">
-    <div class="col-12 col-lg-6">
+  <div class="row mb-3">
+    <div class="col-12 col-lg-6 mb-3 mb-lg-0 d-flex flex-column">
       <h2>Extracted Links</h2>
       <div>This section will display the links extracted from the PDF</div>
       <p><b>File: </b>{{filename}}</p>
-      <table class="table table-sm table-hover">
-        <thead>
-        <tr>
-          <th>URL</th>
-          <th>Actions</th>
-        </tr>
-        </thead>
-        {% for url in urls %}
-        <tr>
-          <td class="w-100" style="white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0;">
-            <a href='{{url}}' target="_blank">{{url}}</a>
-          </td>
-          <td>
-            <button
-              class="btn btn-primary btn-sm"
-              data-urls='["{{url | safe}}"]'
-              name="url"
-              onclick="window.robustify(this)">
-              Robustify
-            </button>
-          </td>
-        </tr>
-        {% endfor %}
-        <tfoot>
-        <tr>
-          <td colspan="2">
-            <button
-              class="btn btn-primary btn-sm w-100"
-              data-urls='{{urls | tojson}}'
-              name="url"
-              onclick="window.robustify(this)">
-              Robustify All
-            </button>
-          </td>
-        </tr>
-        </tfoot>
-      </table>
+      <div class="d-flex flex-column flex-grow-1 mb-1">
+        <table class="table table-sm table-hover my-0">
+          <thead>
+          <tr><th>URL</th><th>Actions</th></tr>
+          </thead>
+          {% for url in urls %}
+          <tr>
+            <td class="w-100 nowrap"><a href='{{url}}' target="_blank">{{url}}</a></td>
+            <td>
+              <button class="btn btn-primary btn-sm" data-urls='["{{url|safe}}"]' name="url" onclick="robustify(this)">
+                Robustify
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <button class="btn btn-primary btn-sm w-100" data-urls='{{urls|tojson}}' name="url" onclick="robustify(this)">
+        Robustify All
+      </button>
     </div>
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-6 d-flex flex-column">
       <h2>Robustified Links</h2>
       <div>This section will display the extracted links that were robustified</div>
-      <p class="text-muted">
-        <span id="progress"></span>
-        <span class="spinner-border spinner-border-sm text-primary d-none" id="spinner" role="status"></span>
+      <p class="text-muted mb-4">
+        <span id="progress">(Once you begin to robustify, your progress will show here)</span>
+        <span class="spinner-border spinner-border-sm text-primary d-none ml-1" id="spinner" role="status"></span>
       </p>
-      <div class="w-100 h-100 p-2 small"
-           id="log"
-           style="border:1px solid black;max-height:80vh;overflow-y:scroll"></div>
+      <div class="w-100 p-2 small b-1 d-flex flex-column flex-grow-1 mb-1" id="log"></div>
+      <button class="btn btn-primary btn-sm w-100" type="button" onclick="generateLDN()">Generate LDN Message</button>
     </div>
   </div>
-  <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+  <div class="row">
+    <div class="col">
+      <h2>Linked Data Notification</h2>
+      <div>This section will let you send a LDN to a specified receiver</div>
+      <form class="my-3">
+        <label class="form-label" for="ldn-url"><b>URL</b></label>
+        <input class="form-control form-control-sm mb-1" id="ldn-url" name="ldn-url" type="url"
+               value="http://160.1.118.115:8088">
+        <label class="form-label" for="ldn-msg"><b>Message</b></label>
+        <textarea class="form-control form-control-sm" id="ldn-msg" name="ldn-msg" type="text"></textarea>
+        <button class="btn btn-primary btn-sm my-1 w-100" formaction="/upload" formmethod="post" type="submit">
+          Send Linked Data Notification
+        </button>
+      </form>
+    </div>
+  </div>
+  <!-- toast -->
+  <div class="position-fixed top-0 end-0 p-3 z-top">
     <div aria-atomic="true" aria-live="assertive" class="toast hide" id="copiedToast" role="alert">
       <div class="toast-header bg-success text-white">
         <strong class="me-auto">Copied</strong>
