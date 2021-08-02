@@ -8,6 +8,7 @@
   <script crossorigin="anonymous"
           integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- clipboard copy script -->
   <script>
     // source: https://stackoverflow.com/questions/51805395/navigator-clipboard-is-undefined
     window.copyToClipboard = function (textToCopy) {
@@ -34,15 +35,27 @@
         }).then(showToast);
       }
     }
-
+  </script>
+  <!-- robustify script -->
+  <script>
     window.robustify = function (target) {
-      const log = document.getElementById("log");
-      const urls = JSON.parse(target.dataset.urls);
+      // declare element variables
+      const logEl = document.getElementById("log");
+      const progressEl = document.getElementById("progress");
+      const spinnerEl = document.getElementById("spinner");
+      const urlEls = [...document.getElementsByName("url").values()];
+      // initialize state variables / functions
       const decoder = new TextDecoder('utf-8');
-      const successUris = [];
-      const errorUris = [];
-      document.getElementsByName("url")
-        .forEach(e => e.setAttribute("disabled", ""));
+      const urls = JSON.parse(target.dataset.urls);
+      const passUrls = [];
+      const failUrls = [];
+      const updateProgress = () => progressEl.innerHTML = `Pass: ${passUrls.length}, Fail: ${failUrls.length}, Total: ${urls.length}`;
+      // initialize UI
+      logEl.innerHTML = "";
+      urlEls.forEach(e => e.setAttribute("disabled", ""));
+      spinnerEl.classList.toggle("d-none", false);
+      updateProgress();
+      // call the robustify API
       fetch("/robustify", {
         method: "post",
         headers: {'Content-Type': 'application/json'},
@@ -54,9 +67,9 @@
             const {done, value} = await reader.read();
             if (done) {
               // final update
-              document.getElementsByName("url")
-                .forEach(e => e.removeAttribute("disabled"));
-              target.classList.replace("btn-primary", "btn-success");
+              urlEls.forEach(e => e.removeAttribute("disabled"));
+              spinnerEl.classList.toggle("d-none", true);
+              updateProgress();
               break;
             }
             // incremental update
@@ -71,7 +84,7 @@
               text = String.raw`
 <div class="card mb-2">
   <div class="card-header px-2 bg-success text-white">
-    <b>${uri}</b>
+    <b style="white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0;">${uri}</b>
   </div>
   <div class="card-body p-2">
     <table class="card-text w-100">
@@ -100,7 +113,7 @@
     </table>
   </div>
 </div>`;
-              successUris.push(uri);
+              passUrls.push(uri);
             } else {
               const err = res['error'];
               text = String.raw`
@@ -119,15 +132,14 @@
     </table>
   </div>
 </div>`;
-              errorUris.push(uri);
+              failUrls.push(uri);
             }
-            log.innerHTML += text;
+            logEl.innerHTML += text;
+            updateProgress();
 
-            [...document.getElementsByName("url").values()]
-              .filter(e => JSON.parse(e.dataset.urls).every(u => successUris.includes(u)))
+            urlEls.filter(e => JSON.parse(e.dataset.urls).every(u => passUrls.includes(u)))
               .forEach(e => e.classList.replace("btn-primary", "btn-success"));
-            [...document.getElementsByName("url").values()]
-              .filter(e => JSON.parse(e.dataset.urls).some(u => errorUris.includes(u)))
+            urlEls.filter(e => JSON.parse(e.dataset.urls).some(u => failUrls.includes(u)))
               .forEach(e => {
                 e.classList.replace("btn-primary", "btn-warning");
                 e.classList.replace("btn-success", "btn-warning");
@@ -145,7 +157,8 @@
   <div class="row">
     <div class="col-12 col-lg-6">
       <h2>Extracted Links</h2>
-      <h3 class="text-muted">{{filename}}</h3>
+      <div>This section will display the links extracted from the PDF</div>
+      <p><b>File: </b>{{filename}}</p>
       <table class="table table-sm table-hover">
         <thead>
         <tr>
@@ -185,8 +198,12 @@
       </table>
     </div>
     <div class="col-12 col-lg-6">
-      <h2>Robustifcation Log</h2>
-      <p>This section will display the log for link robustification.</p>
+      <h2>Robustified Links</h2>
+      <div>This section will display the extracted links that were robustified</div>
+      <p class="text-muted">
+        <span id="progress"></span>
+        <span class="spinner-border spinner-border-sm text-primary d-none" id="spinner" role="status"></span>
+      </p>
       <div class="w-100 h-100 p-2 small"
            id="log"
            style="border:1px solid black;max-height:80vh;overflow-y:scroll"></div>
@@ -198,8 +215,9 @@
         <strong class="me-auto">Copied</strong>
         <button aria-label="Close" class="btn-close" data-bs-dismiss="toast" type="button"></button>
       </div>
-      <div class="toast-body">You can now paste the copied href into an HTML.</div>
+      <div class="toast-body">You can now paste the copied href into HTML</div>
     </div>
   </div>
 </div>
 </body>
+
