@@ -138,6 +138,8 @@ function robustify(filename, target) {
     })
 }
 
-function generateLDN() {
-
+function getLDN(filename) {
+  return fetch(`/ldn/${filename}`)
+    .then(async res => await res.json())
+    .then(json => JSON.stringify(json, null, 2));
 }

@@ -22,6 +22,7 @@ def upload_pdf():
     return redirect('/')
   # get file object
   file = request.files['file']
+  orig_filename = file.filename
   # copy PDF into in-memory buffer
   data = io.BytesIO()
   data.write(file.stream.read())
@@ -29,12 +30,14 @@ def upload_pdf():
   data.seek(0)
   # calculate MD5 hash (which will be used as filename)
   out_basename = hashlib.md5(data.read()).hexdigest()
-  out_path = os.path.join(app.config['UPLOADS_FOLDER'], out_basename + ".pdf")
+  out_path = os.path.join(app.config['UPLOADS_FOLDER'], out_basename)
   # seek to beginning of buffer
   data.seek(0)
   # write buffer to file
-  with open(out_path, "wb") as f:
+  with open(out_path + ".pdf", "wb") as f:
     f.write(data.read())
+  with open(out_path + ".pdf.txt", "w") as f:
+    f.write(orig_filename)
   # redirect to URL extraction page
   return redirect(f'/links/{out_basename}')
 
@@ -52,7 +55,7 @@ def get_extract_links_page(pdf_name: str):
 
 def save_mappings(mappings: dict, pdf_name: str):
   # write mappings to file
-  with open(os.path.join(app.config['MAPPING_FOLDER'], pdf_name + "pdf.json"), "w") as f:
+  with open(os.path.join(app.config['MAPPING_FOLDER'], pdf_name + ".pdf.json"), "w") as f:
     json.dump(mappings, f)
 
 
@@ -109,21 +112,30 @@ def robustify():
   return app.response_class(generate(), content_type='application/octet-stream')
 
 
-@app.route("/notify", methods=['POST'])
-def send_ldn():
+@app.route("/ldn/<pdf_name>", methods=['GET'])
+def get_ldn(pdf_name: str):
+  with open(os.path.join(app.config['UPLOADS_FOLDER'], pdf_name + ".pdf.txt")) as f:
+    orig_pdf_name = f.readline()
+  message = json.loads(render_template("ldn.json", hostname=request.host_url.strip(' /'), pdf_name=pdf_name, orig_pdf_name=orig_pdf_name))
+  # Return LDN
+  return flask.jsonify(message)
+
+
+@app.route("/ldn/<pdf_name>", methods=['POST'])
+def send_ldn(pdf_name: str):
   # get JSON payload
-  payload = request.get_json()
-  to: str = payload['to']
-  message = payload['message']
-  #
+  to = request.form['to']
+  message = get_ldn(pdf_name).get_json()
+  # get LDN inbox URL
   res = requests.head(to)
   ldn_inbox_rel = "http://www.w3.org/ns/ldp#inbox"
   if ldn_inbox_rel not in res.links:
     return flask.jsonify({"ok": False, "error": f"The URL {to} does not reference an LDN Inbox"})
   # Get LDN inbox URL
   ldn_inbox_url = res.links[ldn_inbox_rel]['url']
-  return flask.jsonify({"ok": True, "ldn_inbox_url": ldn_inbox_url})
   # Send LDN
+  res = requests.post(ldn_inbox_url, json=message, headers={'Content-Type', 'application/ld+json'})
+  return flask.make_response(res.content, res.status_code)
 
 
 @app.route("/", methods=['GET'])

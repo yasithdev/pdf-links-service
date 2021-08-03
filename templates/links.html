@@ -19,19 +19,21 @@
   <script>
     // noinspection JSFileReferences
     require.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs'}});
-    require(["vs/editor/editor.main"], () => {
-      monaco.editor.create(document.getElementById('ldn-msg'), {
-        value: `{}`,
-        language: 'json',
-        theme: 'vs-light',
-        minimap: {enabled: false},
-        scrollBeyondLastLine: false,
-        glyphMarginWidth: 0,
-        lineDecorationsWidth: 0,
-        lineNumbersMinChars: 3,
-        lineNumbersMaxChars: 3,
+    getLDN('{{filename}}').then(value => {
+      require(["vs/editor/editor.main"], () => {
+        window.ldnEditor = monaco.editor.create(document.getElementById('ldn-msg'), {
+          value: value,
+          language: 'json',
+          theme: 'vs-light',
+          minimap: {enabled: false},
+          scrollBeyondLastLine: false,
+          glyphMarginWidth: 0,
+          lineDecorationsWidth: 0,
+          lineNumbersMinChars: 3,
+          lineNumbersMaxChars: 3,
+        });
       });
-    });
+    })
   </script>
 </head>
 <body>
@@ -76,7 +78,9 @@
         <span class="spinner-border spinner-border-sm text-primary d-none ml-1" id="spinner" role="status"></span>
       </p>
       <div class="w-100 small b-1 d-flex flex-column flex-grow-1 mb-1" id="log"></div>
-      <button class="btn btn-primary btn-sm w-100" onclick="generateLDN()" type="button">Generate LDN Message</button>
+      <button class="btn btn-primary btn-sm w-100" onclick="getLDN('{{filename}}').then(value => window.ldnEditor.setValue(value))" type="button">
+        Get LDN Message
+      </button>
     </div>
   </div>
   <div class="row">
