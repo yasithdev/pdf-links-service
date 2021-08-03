@@ -43,7 +43,7 @@
     <div class="col-12 col-lg-6 mb-3 mb-lg-0 d-flex flex-column">
       <h2>Extracted Links</h2>
       <div>This section will display the links extracted from the PDF</div>
-      <p><b>File: </b>{{filename}}</p>
+      <p><b>File: </b><a href="/pdfs/{{filename}}" target="_blank">{{filename}}.pdf</a></p>
       <div class="d-flex flex-column flex-grow-1 mb-1">
         <table class="table table-sm table-hover my-0">
           <thead>
@@ -56,7 +56,7 @@
           <tr>
             <td class="w-100 nowrap"><a href='{{url}}' target="_blank">{{url}}</a></td>
             <td>
-              <button class="btn btn-primary btn-sm" data-urls='["{{url|safe}}"]' name="url" onclick="robustify(this)">
+              <button class="btn btn-primary btn-sm" data-urls='["{{url|safe}}"]' name="url" onclick="robustify('{{filename}}', this)">
                 Robustify
               </button>
             </td>
@@ -64,7 +64,7 @@
           {% endfor %}
         </table>
       </div>
-      <button class="btn btn-primary btn-sm w-100" data-urls='{{urls|tojson}}' name="url" onclick="robustify(this)">
+      <button class="btn btn-primary btn-sm w-100" data-urls='{{urls|tojson}}' name="url" onclick="robustify('{{filename}}', this)">
         Robustify All
       </button>
     </div>
@@ -88,7 +88,7 @@
         <input class="form-control form-control-sm mb-1" id="ldn-url" name="ldn-url" type="url"
                value="http://160.1.118.115:8088">
         <label class="form-label" for="ldn-msg"><b>Message</b></label>
-        <div id="ldn-msg" class="b-1 p-1 w-100 overflow-hidden" style="height:320px;"></div>
+        <div class="b-1 p-1 w-100 overflow-hidden" id="ldn-msg" style="height:320px;"></div>
         <button class="btn btn-primary btn-sm my-1 w-100" type="button">
           Send Linked Data Notification
         </button>

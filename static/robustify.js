@@ -76,7 +76,7 @@ function bs_card_fail(uri, err) {
 </div>`;
 }
 
-function robustify(target) {
+function robustify(filename, target) {
   // declare element variables
   const logEl = document.getElementById("log");
   const progressEl = document.getElementById("progress");
@@ -97,7 +97,7 @@ function robustify(target) {
   fetch("/robustify", {
     method: "post",
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(urls)
+    body: JSON.stringify({filename: filename, uris: urls})
   })
     .then(response => response.body.getReader())
     .then(async reader => {

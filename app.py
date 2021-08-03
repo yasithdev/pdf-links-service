@@ -3,20 +3,19 @@ import io
 import json
 import os
 
+import flask
 import requests
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_file
 
 from extractor import Extractor
 
-UPLOAD_FOLDER = './uploads'
-
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
+app.config['UPLOADS_FOLDER'] = './pdfs'
+app.config['MAPPING_FOLDER'] = './mappings'
 extractor = Extractor()
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/pdfs', methods=['POST'])
 def upload_pdf():
   # sanity check
   if 'file' not in request.files:
@@ -29,64 +28,102 @@ def upload_pdf():
   # seek to beginning of buffer
   data.seek(0)
   # calculate MD5 hash (which will be used as filename)
-  out_basename = hashlib.md5(data.read()).hexdigest() + ".pdf"
-  out_path = os.path.join(app.config['UPLOAD_FOLDER'], out_basename)
+  out_basename = hashlib.md5(data.read()).hexdigest()
+  out_path = os.path.join(app.config['UPLOADS_FOLDER'], out_basename + ".pdf")
   # seek to beginning of buffer
   data.seek(0)
   # write buffer to file
   with open(out_path, "wb") as f:
     f.write(data.read())
   # redirect to URL extraction page
-  return redirect(f'/extract/{out_basename}')
+  return redirect(f'/links/{out_basename}')
 
 
-@app.route("/extract/<fp>", methods=['GET'])
-def extract_links(fp: str):
-  urls = extractor.extract_urls(os.path.join(app.config['UPLOAD_FOLDER'], fp))
-  return render_template("urls.html", filename=fp, urls=urls)
+@app.route("/pdfs/<pdf_name>", methods=['GET'])
+def get_pdf(pdf_name: str):
+  return send_file(os.path.join(app.config['UPLOADS_FOLDER'], pdf_name + ".pdf"))
+
+
+@app.route("/links/<pdf_name>", methods=['GET'])
+def get_extract_links_page(pdf_name: str):
+  urls = extractor.extract_urls(os.path.join(app.config['UPLOADS_FOLDER'], pdf_name + ".pdf"))
+  return render_template("links.html", filename=pdf_name, urls=urls)
+
+
+def save_mappings(mappings: dict, pdf_name: str):
+  # write mappings to file
+  with open(os.path.join(app.config['MAPPING_FOLDER'], pdf_name + "pdf.json"), "w") as f:
+    json.dump(mappings, f)
+
+
+@app.route("/mappings/<pdf_name>", methods=['GET'])
+def get_mappings(pdf_name: str):
+  return send_file(os.path.join(app.config['MAPPING_FOLDER'], pdf_name + ".pdf.json"))
 
 
 @app.route("/robustify", methods=['POST'])
 def robustify():
-  uris = request.get_json()
+  req_json = request.get_json()
+  filename = req_json['filename']
+  uris = req_json['uris']
 
   def generate():
+    mappings = {}
+    # robustify the given uris
     for uri in uris:
       uri = uri.strip()
       res = requests.get(f"http://robustlinks.mementoweb.org/api/", {"url": uri})
       try:
         res_json = res.json()
         if 'robust_links_html' in res_json:
-          yield json.dumps({
+          payload = {
             "ok": True,
             "uri": uri,
             "href_uri_r": res_json['robust_links_html']['original_url_as_href'],
             "href_uri_m": res_json['robust_links_html']['memento_url_as_href'],
-          }) + "\n"
+          }
         elif 'friendly error' in res_json:
-          yield json.dumps({
+          payload = {
             "ok": False,
             "uri": uri,
             "error": res_json['friendly error'].strip()
-          }) + "\n"
+          }
+        else:
+          payload = {
+            "ok": False,
+            "uri": uri,
+            "error": "Unknown Error from Robust Links API"
+          }
       except json.JSONDecodeError:
-        yield json.dumps({
+        payload = {
           "ok": False,
           "uri": uri,
-          "error": f"Did not receive JSON output for URI {uri}"
-        }) + "\n"
+          "error": f"Error decoding response (JSON) from Robust Links API for URI {uri}"
+        }
+      mappings[uri] = payload
+      # stream progress for each uri
+      yield json.dumps(payload) + "\n"
+    # save mappings into file
+    save_mappings(mappings, filename)
 
   return app.response_class(generate(), content_type='application/octet-stream')
 
 
-@app.route("/ldn", methods=['POST'])
+@app.route("/notify", methods=['POST'])
 def send_ldn():
   # get JSON payload
   payload = request.get_json()
   to: str = payload['to']
   message = payload['message']
   #
-  link_header = request.headers.get("Link")
+  res = requests.head(to)
+  ldn_inbox_rel = "http://www.w3.org/ns/ldp#inbox"
+  if ldn_inbox_rel not in res.links:
+    return flask.jsonify({"ok": False, "error": f"The URL {to} does not reference an LDN Inbox"})
+  # Get LDN inbox URL
+  ldn_inbox_url = res.links[ldn_inbox_rel]['url']
+  return flask.jsonify({"ok": True, "ldn_inbox_url": ldn_inbox_url})
+  # Send LDN
 
 
 @app.route("/", methods=['GET'])
