@@ -26,7 +26,7 @@ function copyToClipboard(textToCopy) {
 
 function bs_card_done(uri, href_uri_r, cp_href_uri_r, href_uri_m, cp_href_uri_m) {
   return String.raw`
-<div class="card mb-2">
+<div class="card mb-1">
   <div class="card-header px-2 bg-success text-white">
     <b class="nowrap">${uri}</b>
   </div>
@@ -59,7 +59,7 @@ function bs_card_done(uri, href_uri_r, cp_href_uri_r, href_uri_m, cp_href_uri_m)
 
 function bs_card_fail(uri, err) {
   return String.raw`
-<div class="card mb-2">
+<div class="card mb-1">
   <div class="card-header px-2 bg-warning text-white">
     <b>${uri}</b>
   </div>

@@ -3,7 +3,7 @@
   <!-- title -->
   <title>PDF Links Service</title>
   <!-- favicon -->
-  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link href="{{ url_for('static', filename='favicon.ico') }}" rel="shortcut icon">
   <!-- meta -->
   <meta charset="UTF-8">
   <meta content="width=device-width,initial-scale=1.0" name="viewport">
@@ -13,6 +13,26 @@
   <!-- js -->
   <script rel="script" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
   <script rel="script" src="{{url_for('static',filename='robustify.js')}}"></script>
+  <!-- monaco -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.min.css" rel="stylesheet"/>
+  <script rel="script" src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
+  <script>
+    // noinspection JSFileReferences
+    require.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs'}});
+    require(["vs/editor/editor.main"], () => {
+      monaco.editor.create(document.getElementById('ldn-msg'), {
+        value: `{}`,
+        language: 'json',
+        theme: 'vs-light',
+        minimap: {enabled: false},
+        scrollBeyondLastLine: false,
+        glyphMarginWidth: 0,
+        lineDecorationsWidth: 0,
+        lineNumbersMinChars: 3,
+        lineNumbersMaxChars: 3,
+      });
+    });
+  </script>
 </head>
 <body>
 <nav class="navbar navbar-dark bg-dark mb-2">
@@ -27,7 +47,10 @@
       <div class="d-flex flex-column flex-grow-1 mb-1">
         <table class="table table-sm table-hover my-0">
           <thead>
-          <tr><th>URL</th><th>Actions</th></tr>
+          <tr>
+            <th>URL</th>
+            <th>Actions</th>
+          </tr>
           </thead>
           {% for url in urls %}
           <tr>
@@ -52,24 +75,24 @@
         <span id="progress">(Once you begin to robustify, your progress will show here)</span>
         <span class="spinner-border spinner-border-sm text-primary d-none ml-1" id="spinner" role="status"></span>
       </p>
-      <div class="w-100 p-2 small b-1 d-flex flex-column flex-grow-1 mb-1" id="log"></div>
-      <button class="btn btn-primary btn-sm w-100" type="button" onclick="generateLDN()">Generate LDN Message</button>
+      <div class="w-100 small b-1 d-flex flex-column flex-grow-1 mb-1" id="log"></div>
+      <button class="btn btn-primary btn-sm w-100" onclick="generateLDN()" type="button">Generate LDN Message</button>
     </div>
   </div>
   <div class="row">
     <div class="col">
       <h2>Linked Data Notification</h2>
       <div>This section will let you send a LDN to a specified receiver</div>
-      <form class="my-3">
+      <div class="my-3">
         <label class="form-label" for="ldn-url"><b>URL</b></label>
         <input class="form-control form-control-sm mb-1" id="ldn-url" name="ldn-url" type="url"
                value="http://160.1.118.115:8088">
         <label class="form-label" for="ldn-msg"><b>Message</b></label>
-        <textarea class="form-control form-control-sm" id="ldn-msg" name="ldn-msg" type="text"></textarea>
-        <button class="btn btn-primary btn-sm my-1 w-100" formaction="/upload" formmethod="post" type="submit">
+        <div id="ldn-msg" class="b-1 p-1 w-100 overflow-hidden" style="height:320px;"></div>
+        <button class="btn btn-primary btn-sm my-1 w-100" type="button">
           Send Linked Data Notification
         </button>
-      </form>
+      </div>
     </div>
   </div>
   <!-- toast -->
