@@ -88,18 +88,20 @@
       <h2>Linked Data Notification</h2>
       <div>This section will let you send a LDN to a specified receiver</div>
       <div class="my-3">
+        <label class="form-label" for="ldn-msg"><b>Preview</b></label>
+        <div class="b-1 p-1 mb-1 w-100 overflow-hidden" id="ldn-msg" style="height:320px;"></div>
         <label class="form-label" for="ldn-url"><b>URL</b></label>
         <input class="form-control form-control-sm mb-1" id="ldn-url" name="ldn-url" type="url"
                value="http://160.1.118.115:8088">
-        <label class="form-label" for="ldn-msg"><b>Message</b></label>
-        <div class="b-1 p-1 w-100 overflow-hidden" id="ldn-msg" style="height:320px;"></div>
-        <button class="btn btn-primary btn-sm my-1 w-100" type="button">
+        <button class="btn btn-primary btn-sm my-1 w-100"
+                onclick="sendLDN('{{filename}}',document.getElementById('ldn-url').value).then(_ => showToast('ldnSentToast')).catch(_ => showToast('ldnFailToast'))"
+                type="button">
           Send Linked Data Notification
         </button>
       </div>
     </div>
   </div>
-  <!-- toast -->
+  <!-- toasts -->
   <div class="position-fixed top-0 end-0 p-3 z-top">
     <div aria-atomic="true" aria-live="assertive" class="toast hide" id="copiedToast" role="alert">
       <div class="toast-header bg-success text-white">
@@ -107,6 +109,24 @@
         <button aria-label="Close" class="btn-close" data-bs-dismiss="toast" type="button"></button>
       </div>
       <div class="toast-body">You can now paste the copied href into HTML</div>
+    </div>
+  </div>
+  <div class="position-fixed top-0 end-0 p-3 z-top">
+    <div aria-atomic="true" aria-live="assertive" class="toast hide" id="ldnSentToast" role="alert">
+      <div class="toast-header bg-success text-white">
+        <strong class="me-auto">LDN Sent Successfully</strong>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="toast" type="button"></button>
+      </div>
+      <div class="toast-body">Please verify by checking the LDN inbox.</div>
+    </div>
+  </div>
+  <div class="position-fixed top-0 end-0 p-3 z-top">
+    <div aria-atomic="true" aria-live="assertive" class="toast hide" id="ldnFailToast" role="alert">
+      <div class="toast-header bg-success text-white">
+        <strong class="me-auto">Could not send LDN</strong>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="toast" type="button"></button>
+      </div>
+      <div class="toast-body">Please check your console for more information.</div>
     </div>
   </div>
 </div>

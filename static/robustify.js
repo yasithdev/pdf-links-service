@@ -1,10 +1,13 @@
+function showToast(elementId) {
+  new bootstrap.Toast(document.getElementById(elementId)).show()
+}
+
 function copyToClipboard(textToCopy) {
   // source: https://stackoverflow.com/questions/51805395/navigator-clipboard-is-undefined
-  const showToast = () => new bootstrap.Toast(document.getElementById("copiedToast")).show();
   // navigator clipboard api needs a secure context (https)
   if (navigator.clipboard && window.isSecureContext) {
     // navigator clipboard api method'
-    return navigator.clipboard.writeText(textToCopy).then(showToast);
+    return navigator.clipboard.writeText(textToCopy).then(_ => showToast('copiedToast'));
   } else {
     // text area method
     let textArea = document.createElement("textarea");
@@ -20,7 +23,7 @@ function copyToClipboard(textToCopy) {
       // here the magic happens
       document.execCommand('copy') ? res() : rej();
       textArea.remove();
-    }).then(showToast);
+    }).then(_ => showToast('copiedToast'));
   }
 }
 
@@ -142,4 +145,12 @@ function getLDN(filename) {
   return fetch(`/ldn/${filename}`)
     .then(async res => await res.json())
     .then(json => JSON.stringify(json, null, 2));
+}
+
+function sendLDN(filename, addr) {
+  return fetch(`/ldn/${filename}`, {
+    method: "post",
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({to: addr})
+  }).then(res => res.status)
 }

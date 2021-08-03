@@ -124,7 +124,8 @@ def get_ldn(pdf_name: str):
 @app.route("/ldn/<pdf_name>", methods=['POST'])
 def send_ldn(pdf_name: str):
   # get JSON payload
-  to = request.form['to']
+  req_json = request.get_json()
+  to = req_json['to']
   message = get_ldn(pdf_name).get_json()
   # get LDN inbox URL
   res = requests.head(to)
@@ -134,7 +135,7 @@ def send_ldn(pdf_name: str):
   # Get LDN inbox URL
   ldn_inbox_url = res.links[ldn_inbox_rel]['url']
   # Send LDN
-  res = requests.post(ldn_inbox_url, json=message, headers={'Content-Type', 'application/ld+json'})
+  res = requests.post(ldn_inbox_url, json=message, headers={'Content-Type': 'application/ld+json'})
   return flask.make_response(res.content, res.status_code)
 
 
