@@ -87,7 +87,8 @@ function robustify(filename, target) {
   // initialize state variables / functions
   const decoder = new TextDecoder('utf-8');
   // get selected items
-  const urls = [...document.getElementsByName('url').values()].filter(e => e.checked).map(e => e.value);
+  const items = [...document.getElementsByName('url').values()];
+  const urls = items.filter(e => e.checked).map(e => e.value);
   if (urls.length === 0) {
     alert('Please select at least one URL first.');
     return;
@@ -98,6 +99,7 @@ function robustify(filename, target) {
   // initialize UI
   logEl.innerHTML = "";
   spinnerEl.classList.toggle("d-none", false);
+  items.forEach(e => e.toggleAttribute("disabled", true));
   target.toggleAttribute("disabled", true);
   updateProgress();
   // call the robustify API
@@ -112,6 +114,7 @@ function robustify(filename, target) {
         const {done, value} = await reader.read();
         if (done) {
           // final update
+          items.forEach(e => e.toggleAttribute("disabled", false));
           target.toggleAttribute("disabled", false);
           spinnerEl.classList.toggle("d-none", true);
           updateProgress();
