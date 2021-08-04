@@ -84,17 +84,21 @@ function robustify(filename, target) {
   const logEl = document.getElementById("log");
   const progressEl = document.getElementById("progress");
   const spinnerEl = document.getElementById("spinner");
-  const urlEls = [...document.getElementsByName("url").values()];
   // initialize state variables / functions
   const decoder = new TextDecoder('utf-8');
-  const urls = JSON.parse(target.dataset.urls);
+  // get selected items
+  const urls = [...document.getElementsByName('url').values()].filter(e => e.checked).map(e => e.value);
+  if (urls.length === 0) {
+    alert('Please select at least one URL first.');
+    return;
+  }
   const passUrls = [];
   const failUrls = [];
   const updateProgress = () => progressEl.innerHTML = `Pass: ${passUrls.length}, Fail: ${failUrls.length}, Total: ${urls.length}`;
   // initialize UI
   logEl.innerHTML = "";
-  urlEls.forEach(e => e.setAttribute("disabled", ""));
   spinnerEl.classList.toggle("d-none", false);
+  target.toggleAttribute("disabled", true);
   updateProgress();
   // call the robustify API
   fetch("/robustify", {
@@ -108,7 +112,7 @@ function robustify(filename, target) {
         const {done, value} = await reader.read();
         if (done) {
           // final update
-          urlEls.forEach(e => e.removeAttribute("disabled"));
+          target.toggleAttribute("disabled", false);
           spinnerEl.classList.toggle("d-none", true);
           updateProgress();
           break;
@@ -129,14 +133,6 @@ function robustify(filename, target) {
           failUrls.push(uri);
         }
         updateProgress();
-        // button colors
-        urlEls.filter(e => JSON.parse(e.dataset.urls).every(u => passUrls.includes(u)))
-          .forEach(e => e.classList.replace("btn-primary", "btn-success"));
-        urlEls.filter(e => JSON.parse(e.dataset.urls).some(u => failUrls.includes(u)))
-          .forEach(e => {
-            e.classList.replace("btn-primary", "btn-warning");
-            e.classList.replace("btn-success", "btn-warning");
-          });
       }
     })
 }

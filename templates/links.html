@@ -50,24 +50,20 @@
         <table class="table table-sm table-hover my-0">
           <thead>
           <tr>
+            <th><label><input name="all" value="true" type="checkbox" onclick="[...document.getElementsByName('url').values()].forEach(e => e.checked = this.checked)"></label></th>
             <th>URL</th>
-            <th>Actions</th>
           </tr>
           </thead>
           {% for url in urls %}
           <tr>
+            <td><label><input name="url" type="checkbox" value='{{url|safe}}'></label></td>
             <td class="w-100 nowrap"><a href='{{url}}' target="_blank">{{url}}</a></td>
-            <td>
-              <button class="btn btn-primary btn-sm" data-urls='["{{url|safe}}"]' name="url" onclick="robustify('{{filename}}', this)">
-                Robustify
-              </button>
-            </td>
           </tr>
           {% endfor %}
         </table>
       </div>
       <button class="btn btn-primary btn-sm w-100" data-urls='{{urls|tojson}}' name="url" onclick="robustify('{{filename}}', this)">
-        Robustify All
+        Robustify
       </button>
     </div>
     <div class="col-12 col-lg-6 d-flex flex-column">
