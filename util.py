@@ -21,7 +21,7 @@ class Util:
     :return: Canonical URL (or None)
     """
     # sanitize URL
-    url = url.strip(" /\n'\"").replace(" ", "%20")
+    url = url.strip(" /\n'\".").replace(" ", "%20")
     # convert url to canonical form
     if url.startswith("https://"):
       pass
