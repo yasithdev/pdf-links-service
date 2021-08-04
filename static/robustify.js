@@ -84,11 +84,12 @@ function robustify(filename, target) {
   const logEl = document.getElementById("log");
   const progressEl = document.getElementById("progress");
   const spinnerEl = document.getElementById("spinner");
+  const selectorEl = document.getElementById("all");
+  const urlsEl = [...document.getElementsByName('url').values()];
   // initialize state variables / functions
   const decoder = new TextDecoder('utf-8');
   // get selected items
-  const items = [...document.getElementsByName('url').values()];
-  const urls = items.filter(e => e.checked).map(e => e.value);
+  const urls = urlsEl.filter(e => e.checked).map(e => e.value);
   if (urls.length === 0) {
     alert('Please select at least one URL first.');
     return;
@@ -99,8 +100,7 @@ function robustify(filename, target) {
   // initialize UI
   logEl.innerHTML = "";
   spinnerEl.classList.toggle("d-none", false);
-  items.forEach(e => e.toggleAttribute("disabled", true));
-  target.toggleAttribute("disabled", true);
+  [...urlsEl, target, selectorEl].forEach(e => e.toggleAttribute("disabled", true));
   updateProgress();
   // call the robustify API
   fetch("/robustify", {
@@ -114,8 +114,7 @@ function robustify(filename, target) {
         const {done, value} = await reader.read();
         if (done) {
           // final update
-          items.forEach(e => e.toggleAttribute("disabled", false));
-          target.toggleAttribute("disabled", false);
+          [...urlsEl, target, selectorEl].forEach(e => e.toggleAttribute("disabled", false));
           spinnerEl.classList.toggle("d-none", true);
           updateProgress();
           break;

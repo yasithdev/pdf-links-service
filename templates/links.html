@@ -50,7 +50,7 @@
         <table class="table table-sm table-hover my-0">
           <thead>
           <tr>
-            <th><label><input name="all" value="true" type="checkbox" onclick="[...document.getElementsByName('url').values()].forEach(e => e.checked = this.checked)"></label></th>
+            <th><label><input id="all" value="true" type="checkbox" onclick="[...document.getElementsByName('url').values()].forEach(e => e.checked = this.checked)"></label></th>
             <th>URL</th>
           </tr>
           </thead>
@@ -62,9 +62,7 @@
           {% endfor %}
         </table>
       </div>
-      <button class="btn btn-primary btn-sm w-100" data-urls='{{urls|tojson}}' name="url" onclick="robustify('{{filename}}', this)">
-        Robustify
-      </button>
+      <button class="btn btn-primary btn-sm w-100" name="url" onclick="robustify('{{filename}}', this)">Robustify</button>
     </div>
     <div class="col-12 col-lg-6 d-flex flex-column">
       <h2>Robustified Links</h2>
