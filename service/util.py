@@ -4,7 +4,7 @@ from typing import Set
 
 import validators
 
-from service.errors import URLError
+from .errors import URLError
 
 
 class Util:

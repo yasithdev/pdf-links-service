@@ -5,8 +5,8 @@ from typing import Set, List
 import PyPDF2.pdf
 import pypdfium
 
-from service.errors import URLError
-from service.util import Util
+from .errors import URLError
+from .util import Util
 
 
 class Extractor:

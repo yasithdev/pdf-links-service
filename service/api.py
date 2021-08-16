@@ -7,7 +7,7 @@ import os
 import flask
 import requests
 
-from service.extractor import Extractor
+from .extractor import Extractor
 
 app = flask.Flask(__name__)
 app.config['UPLOADS_FOLDER'] = './pdfs'
@@ -22,7 +22,7 @@ ERR_MSG_MISSING_PARAM_FILE = "Missing required parameter 'file'"
 ERR_MSG_ONLY_PDF_ALLOWED = "You are only allowed to upload PDF files"
 
 
-def make_error_response(status: int, message: str):
+def __make_error_response(status: int, message: str):
   """
   Generate an error response.
 
@@ -66,13 +66,13 @@ def upload_pdf():
 
   # assert that request contains a file
   if 'file' not in flask.request.files:
-    return flask.abort(make_error_response(400, ERR_MSG_MISSING_PARAM_FILE))
+    return flask.abort(__make_error_response(400, ERR_MSG_MISSING_PARAM_FILE))
   # get file from the request
   file = flask.request.files['file']
   orig_filename = file.filename
   # ensure that the file is a pdf
   if file.mimetype != 'application/pdf':
-    return flask.abort(make_error_response(400, ERR_MSG_ONLY_PDF_ALLOWED))
+    return flask.abort(__make_error_response(400, ERR_MSG_ONLY_PDF_ALLOWED))
   # copy the PDF into an in-memory buffer
   data = io.BytesIO()
   data.write(file.stream.read())
@@ -110,7 +110,7 @@ def get_pdf(pdf_hash: str):
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
-    flask.abort(make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
+    flask.abort(__make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
   # send file
   return flask.send_file(pdf_path)
 
@@ -133,7 +133,7 @@ def get_extracted_links(pdf_hash: str):
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
-    flask.abort(make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
+    flask.abort(__make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
   # extracts links from PDF
   urls = extractor.extract_all_urls(pdf_path)
   # send extracted links
@@ -158,11 +158,11 @@ def get_mappings(pdf_hash: str):
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
-    flask.abort(make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
+    flask.abort(__make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
   # assert that mappings exist
   mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
   if not os.path.exists(mapping_path):
-    flask.abort(make_error_response(404, ERR_MSG_MAPPING_NOT_FOUND))
+    flask.abort(__make_error_response(404, ERR_MSG_MAPPING_NOT_FOUND))
   # send mappings
   return flask.send_file(mapping_path)
 
@@ -254,11 +254,11 @@ def get_ldn(pdf_hash: str):
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
-    flask.abort(make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
+    flask.abort(__make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
   # assert that PDF metadata exists
   pdf_meta_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf.txt")
   if not os.path.exists(pdf_meta_path):
-    flask.abort(make_error_response(404, ERR_MSG_PDF_META_NOT_FOUND))
+    flask.abort(__make_error_response(404, ERR_MSG_PDF_META_NOT_FOUND))
   # get the original pdf name from metadata
   with open(pdf_meta_path) as f:
     orig_pdf_name = f.readline()

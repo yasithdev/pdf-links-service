@@ -15,8 +15,5 @@ BUILDDIR      = docs/_build
 serve:
 	cd service; flask run --host=$(FLASK_HOST) --port=$(FLASK_PORT)
 
-docs: Makefile
-	$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-
-clean: Makefile
-	$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
