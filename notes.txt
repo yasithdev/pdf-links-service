@@ -1,0 +1,5 @@
+things to do by wednesday
+* update LDN payload
+* outline of presentation structure (with drafted slides)
+* display documentation under /docs
+* preview generated from LDN
