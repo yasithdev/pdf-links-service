@@ -1,26 +1,5 @@
-PDF Links Service Docs
+PDF Links Service Documentation
 =============================================
-
-Core Components
-===============
-
-.. autoclass:: service.extractor.Extractor
-   :members:
-
-.. autoclass:: service.util.Util
-   :members:
-
-Errors
-======
-
-.. autoexception:: service.errors.URLError
-   :members:
-
-HTTP API
-============
-
-.. automodule:: service.main
-   :members:
 
 
 Table of Contents
@@ -28,7 +7,10 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+
+   core
+   errors
+   api
 
 Indices and tables
 ==================
