@@ -4,7 +4,7 @@
 
 __pycache__/
 
-service/pdfs/
-service/mappings/
+pdflinks/pdfs/
+pdflinks/mappings/
 
 docs/_build

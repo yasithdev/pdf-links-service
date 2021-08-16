@@ -1,5 +1,5 @@
 HTTP API
 ============
 
-.. automodule:: service.api
+.. automodule:: pdflinks.api
    :members:

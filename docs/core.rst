@@ -1,10 +1,10 @@
 Core Components
 ===============
 
-.. automodule:: service.extractor
-.. autoclass:: service.extractor.Extractor
+.. automodule:: pdflinks.extractor
+.. autoclass:: pdflinks.extractor.Extractor
    :members:
 
-.. automodule:: service.util
-.. autoclass:: service.extractor.Util
+.. automodule:: pdflinks.util
+.. autoclass:: pdflinks.extractor.Util
    :members:

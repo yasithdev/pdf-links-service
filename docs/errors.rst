@@ -1,6 +1,6 @@
 Errors
 ======
 
-.. automodule:: service.errors
-.. autoexception:: service.errors.URLError
+.. automodule:: pdflinks.errors
+.. autoexception:: pdflinks.errors.URLError
    :members:

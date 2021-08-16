@@ -13,7 +13,7 @@ SOURCEDIR     = docs/
 BUILDDIR      = docs/_build
 
 serve:
-	cd service; flask run --host=$(FLASK_HOST) --port=$(FLASK_PORT)
+	cd pdflinks; flask run --host=$(FLASK_HOST) --port=$(FLASK_PORT)
 
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
