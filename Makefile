@@ -1,6 +1,4 @@
 # Minimal makefile for Sphinx documentation
-export CONFIG_DIR=service/config
-export PYTHONPATH=service
 
 export FLASK_ENV=development
 export FLASK_APP=api.py
@@ -15,7 +13,7 @@ SOURCEDIR     = docs/
 BUILDDIR      = docs/_build
 
 serve:
-	flask run --host=$(FLASK_HOST) --port=$(FLASK_PORT)
+	cd service; flask run --host=$(FLASK_HOST) --port=$(FLASK_PORT)
 
 docs: Makefile
 	$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

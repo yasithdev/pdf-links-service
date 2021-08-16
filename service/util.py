@@ -10,9 +10,9 @@ from service.errors import URLError
 class Util:
 
   def __init__(self) -> None:
-    config_dir = os.environ.get("CONFIG_DIR")
+    base_dir = os.path.dirname(os.path.realpath(__file__))
     # load blacklisted URLs as regex, for validation
-    with open(f"{config_dir}/blacklist.txt") as f:
+    with open(f"{base_dir}/config/blacklist.txt") as f:
       self.blacklist = re.compile("|".join(sorted(map(str.strip, f.readlines()))), re.I)
 
   def canonicalize_url(self, url: str) -> str:
