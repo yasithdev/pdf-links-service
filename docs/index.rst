@@ -1,9 +1,12 @@
-PDF Links Service Documentation
-===============================
+PDF Links Service
+=================
+
+Description
+-----------
 
 
 Table of Contents
-=================
+-----------------
 
 .. toctree::
    :maxdepth: 2
@@ -13,7 +16,7 @@ Table of Contents
    api
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

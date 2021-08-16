@@ -1,8 +1,10 @@
 Core Components
 ===============
 
+.. automodule:: service.extractor
 .. autoclass:: service.extractor.Extractor
    :members:
 
-.. autoclass:: service.util.Util
+.. automodule:: service.util
+.. autoclass:: service.extractor.Util
    :members:
