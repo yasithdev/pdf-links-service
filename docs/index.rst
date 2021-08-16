@@ -1,4 +1,4 @@
-PDF Links Service
+PDFLinks Service
 =================
 
 Description
@@ -7,16 +7,25 @@ Description
 The PDF Links Service allows you to extract URIs in a PDF, robustify them, and notify this robustification through a Linked Data Notification.
 
 The process begins with uploading a PDF document.
-Here, you
+
+.. image:: _static/1-upload-pdf.png
+   :width: 600
+
+Once the PDF is uploaded, the browser is redirected to the next page.
+
+.. image:: _static/2-process-links.png
+   :width: 600
 
 
-Table of Contents
+
+PDFLinks API
 -----------------
 
 .. toctree::
    :maxdepth: 2
 
-   core
+   extractor
+   util
    errors
    api
 
