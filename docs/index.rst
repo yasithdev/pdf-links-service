@@ -4,7 +4,7 @@ PDF Links Service
 Description
 -----------
 
-The PDF Links Service allows you to extract URI references in a PDF, robustify them, and send a Linked Data Notification indicating this action.
+The PDF Links Service allows you to extract URIs in a PDF, robustify them, and notify this robustification through a Linked Data Notification.
 
 The process begins with uploading a PDF document.
 Here, you
