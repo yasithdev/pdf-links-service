@@ -12,6 +12,7 @@ from service.extractor import Extractor
 app = flask.Flask(__name__)
 app.config['UPLOADS_FOLDER'] = './pdfs'
 app.config['MAPPING_FOLDER'] = './mappings'
+extractor = Extractor()
 
 ERR_MSG_TITLE = "Error!"
 ERR_MSG_PDF_NOT_FOUND = "The requested PDF file was not found"
@@ -293,7 +294,3 @@ def send_ldn(pdf_hash: str):
 @app.route("/", methods=['GET'])
 def main_page():
   return flask.render_template("index.html")
-
-
-if __name__ == '__main__':
-  extractor = Extractor()
