@@ -312,11 +312,10 @@ def get_upload_pdf_page():
     """
     Route to get page to upload a PDF file.
 
-    This function intercepts ``GET`` requests to ``/``, and allows to upload a PDF file.
-    Upon selecting and uploading a PDF file, the page redirects to ``/links/<pdf_hash>``, where ``pdf_hash`` is the MD5
-    has of the uploaded PDF.
+    This function intercepts ``GET`` requests to ``/``, and returns a page to select and upload a PDF file.
+    Upon doing so, the page redirects to ``/links/<pdf_hash>``, where ``pdf_hash`` is the MD5 has of the uploaded PDF.
 
     :return: An HTTP Response
 
     """
-    return flask.render_template("index.html")
+    return flask.render_template("upload.html")
