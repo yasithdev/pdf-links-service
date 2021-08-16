@@ -12,6 +12,7 @@ from .extractor import Extractor
 app = flask.Flask(__name__)
 app.config['UPLOADS_FOLDER'] = './pdfs'
 app.config['MAPPING_FOLDER'] = './mappings'
+app.config['DOCS_FOLDER'] = '../docs/_build/html'
 extractor = Extractor()
 
 ERR_MSG_TITLE = "Error!"
@@ -267,8 +268,10 @@ def get_ldn(pdf_hash: str):
         'hostname': flask.request.host_url.strip(' /'),
         'pdf_hash': pdf_hash,
         'pdf_name': pdf_name,
-        'created_time': "",
-        'published_time': ""
+        'created_time': datetime.datetime.utcnow().isoformat(),
+        'published_time': "",
+        'target_url': "",
+        'ldn_inbox_url': ""
     }
     payload = flask.render_template("ldn.json", **ldn_args)
     # return LDN payload as JSON
@@ -319,3 +322,29 @@ def get_upload_pdf_page():
 
     """
     return flask.render_template("upload.html")
+
+
+@app.route("/docs", methods=['GET'])
+def redirect_docs_to_index():
+    """
+    Route to get documentation.
+
+    This function intercepts ``GET`` requests to ``/docs``, and redirects them to ``'/docs/index.html``.
+
+    :return: An HTTP 302 Redirect Response
+
+    """
+    return flask.redirect('/docs/index.html')
+
+
+@app.route("/docs/<path:path>", methods=['GET'])
+def get_docs_page(path: str):
+    """
+    Route to get documentation.
+
+    This function intercepts ``GET`` requests to ``/docs/<page>``, and serves the documentation web page(s).
+
+    :return: An HTTP Response
+
+    """
+    return flask.send_from_directory(app.config['DOCS_FOLDER'], path)
