@@ -1,5 +1,5 @@
-Helper Functions
-================
+URL Utilities
+=============
 
 .. automodule:: pdflinks.util
 .. autoclass:: pdflinks.extractor.Util
