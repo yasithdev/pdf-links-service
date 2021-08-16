@@ -1,6 +1,7 @@
 # Minimal makefile for Sphinx documentation
 export CONFIG_DIR=service/config
 export PYTHONPATH=service
+
 export FLASK_ENV=development
 export FLASK_APP=api.py
 export FLASK_PORT=8000
