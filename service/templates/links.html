@@ -9,10 +9,10 @@
   <meta content="width=device-width,initial-scale=1.0" name="viewport">
   <!-- css -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="{{url_for('static',filename='style.css')}}" rel="stylesheet">
+  <link href="{{ url_for('static',filename='style.css') }}" rel="stylesheet">
   <!-- js -->
   <script rel="script" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script rel="script" src="{{url_for('static',filename='robustify.js')}}"></script>
+  <script rel="script" src="{{ url_for('static',filename='robustify.js') }}"></script>
   <!-- monaco -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.min.css" rel="stylesheet"/>
   <script rel="script" src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
@@ -45,24 +45,25 @@
     <div class="col-12 col-lg-6 mb-3 mb-lg-0 d-flex flex-column">
       <h2>Extracted Links</h2>
       <div>This section will display the links extracted from the PDF</div>
-      <p><b>File: </b><a href="/pdfs/{{filename}}" target="_blank">{{filename}}.pdf</a></p>
+      <p><b>File: </b><a href="/pdfs/{{ filename }}" target="_blank">{{ filename }}.pdf</a></p>
       <div class="d-flex flex-column flex-grow-1 mb-1">
         <table class="table table-sm table-hover my-0">
           <thead>
           <tr>
-            <th><label><input id="all" value="true" type="checkbox" onclick="[...document.getElementsByName('url').values()].forEach(e => e.checked = this.checked)"></label></th>
+            <th><label><input id="all" value="true" type="checkbox"
+                              onclick="[...document.getElementsByName('url').values()].forEach(e => e.checked = this.checked)"></label></th>
             <th>URL</th>
           </tr>
           </thead>
           {% for url in urls %}
-          <tr>
-            <td><label><input name="url" type="checkbox" value='{{url|safe}}'></label></td>
-            <td class="w-100 nowrap"><a href='{{url}}' target="_blank">{{url}}</a></td>
-          </tr>
+            <tr>
+              <td><label><input name="url" type="checkbox" value='{{ url|safe }}'></label></td>
+              <td class="w-100 nowrap"><a href='{{ url }}' target="_blank">{{ url }}</a></td>
+            </tr>
           {% endfor %}
         </table>
       </div>
-      <button class="btn btn-primary btn-sm w-100" name="url" onclick="robustify('{{filename}}', this)">Robustify</button>
+      <button class="btn btn-primary btn-sm w-100" name="url" onclick="robustify('{{ filename }}', this)">Robustify</button>
     </div>
     <div class="col-12 col-lg-6 d-flex flex-column">
       <h2>Robustified Links</h2>
@@ -72,7 +73,7 @@
         <span class="spinner-border spinner-border-sm text-primary d-none ml-1" id="spinner" role="status"></span>
       </p>
       <div class="w-100 small b-1 d-flex flex-column flex-grow-1 mb-1" id="log"></div>
-      <button class="btn btn-primary btn-sm w-100" onclick="getLDN('{{filename}}').then(value => window.ldnEditor.setValue(value))" type="button">
+      <button class="btn btn-primary btn-sm w-100" onclick="getLDN('{{ filename }}').then(value => window.ldnEditor.setValue(value))" type="button">
         Get LDN Message
       </button>
     </div>
@@ -88,7 +89,7 @@
         <input class="form-control form-control-sm mb-1" id="ldn-url" name="ldn-url" type="url"
                value="http://160.1.118.115:8088">
         <button class="btn btn-primary btn-sm my-1 w-100"
-                onclick="sendLDN('{{filename}}',document.getElementById('ldn-url').value).then(_ => showToast('ldnSentToast')).catch(_ => showToast('ldnFailToast'))"
+                onclick="sendLDN('{{ filename }}',document.getElementById('ldn-url').value).then(_ => showToast('ldnSentToast')).catch(_ => showToast('ldnFailToast'))"
                 type="button">
           Send Linked Data Notification
         </button>

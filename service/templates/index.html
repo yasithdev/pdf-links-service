@@ -9,7 +9,7 @@
   <meta content="width=device-width,initial-scale=1.0" name="viewport">
   <!-- css -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="{{url_for('static',filename='style.css')}}" rel="stylesheet">
+  <link href="{{ url_for('static',filename='style.css') }}" rel="stylesheet">
   <!-- js -->
   <script rel="script" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
@@ -18,9 +18,11 @@
   <a class="navbar-brand ms-2" href="/">PDF Links Service</a>
 </nav>
 <div class="container">
-  <div class="alert-warning p-2">
-    <h2>{{title}}</h2>
-    <p>{{message}}</p>
-  </div>
+  <h2>Upload a PDF</h2>
+  <p>Please select a PDF file from your computer and click <b>Upload</b> to continue.</p>
+  <form enctype="multipart/form-data">
+    <input accept="application/pdf" class="form-control form-control-sm" id="pdf" name="file" type="file">
+    <button class="btn btn-primary btn-sm mt-2" formaction="/pdfs" formmethod="post" type="submit">Upload</button>
+  </form>
 </div>
 </body>

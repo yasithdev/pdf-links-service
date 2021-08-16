@@ -1,5 +1,10 @@
 .DS_Store
+
 .idea/
+
 __pycache__/
-pdfs/
-mappings/
+
+service/pdfs/
+service/mappings/
+
+docs/_build

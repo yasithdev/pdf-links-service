@@ -1,24 +1,26 @@
 import ctypes
+import logging
 from typing import Set, List
 
 import PyPDF2.pdf
 import pypdfium
-import logging
 
-from errors import URLError
-from util import Util
+from service.errors import URLError
+from service.util import Util
 
 
 class Extractor:
-  util = Util()
 
-  def __extract_annot_urls(self, fp: str) -> Set[str]:
+  def __init__(self):
+    self.util = Util()
+
+  def extract_annot_urls(self, fp: str) -> Set[str]:
     """
-    Extract Annotated URLs from PDF
-    (Using PyPDF2)
+    Extract Annotated URLs from PDF (Using PyPDF2)
 
     :param fp: Path to PDF
     :return: Set of Annotated URLs in PDF
+
     """
     urls = set()
     with open(fp, "rb") as file:
@@ -41,13 +43,13 @@ class Extractor:
                 logging.debug(e)
     return urls
 
-  def __extract_text_urls(self, fp: str) -> Set[str]:
+  def extract_text_urls(self, fp: str) -> Set[str]:
     """
-    Extract Text URLs from PDF
-    (Using PDFium)
+    Extract Text URLs from PDF (Using PDFium)
 
     :param fp: Path to PDF
     :return: Set of Text URLs in PDF
+
     """
     urls = set()
     buf_len = 2048
@@ -81,18 +83,18 @@ class Extractor:
     pypdfium.FPDF_CloseDocument(doc)
     return urls
 
-  def extract_urls(self, fp: str) -> List[str]:
+  def extract_all_urls(self, fp: str) -> List[str]:
     """
-    Extract All URLs from PDF
-    (Using PyPDF2 and PDFium)
+    Extract All URLs from PDF (Using PyPDF2 and PDFium)
 
     :param fp: Path to PDF
     :return: Set of All URLs in PDF
+
     """
     # extract annotated URLs (baseline, always valid)
-    annot_urls = set(self.__extract_annot_urls(fp))
+    annot_urls = set(self.extract_annot_urls(fp))
     # extract full text URLs (error-prone)
-    full_text_urls = set(self.__extract_text_urls(fp))
+    full_text_urls = set(self.extract_text_urls(fp))
     # pick unique URLs from full_text_urls
     full_text_urls = self.util.pick_uniq_urls(full_text_urls)
     # pick URLs from full_text_urls do not match (exact/partial) any URL in annot_urls

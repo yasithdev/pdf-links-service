@@ -1,7 +1,13 @@
 .DS_Store
+
 .idea/
+
 __pycache__/
-uploads/*
+
+service/pdfs/
+service/mappings/
+
 .gitignore
 .dockerignore
+
 Dockerfile

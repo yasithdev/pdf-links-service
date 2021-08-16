@@ -7,12 +7,11 @@ import os
 import flask
 import requests
 
-from extractor import Extractor
+from service.extractor import Extractor
 
 app = flask.Flask(__name__)
 app.config['UPLOADS_FOLDER'] = './pdfs'
 app.config['MAPPING_FOLDER'] = './mappings'
-extractor = Extractor()
 
 ERR_MSG_TITLE = "Error!"
 ERR_MSG_PDF_NOT_FOUND = "The requested PDF file was not found"
@@ -135,7 +134,7 @@ def get_extracted_links(pdf_hash: str):
   if not os.path.exists(pdf_path):
     flask.abort(make_error_response(404, ERR_MSG_PDF_NOT_FOUND))
   # extracts links from PDF
-  urls = extractor.extract_urls(pdf_path)
+  urls = extractor.extract_all_urls(pdf_path)
   # send extracted links
   return flask.render_template("links.html", filename=pdf_hash, urls=urls)
 
@@ -294,3 +293,7 @@ def send_ldn(pdf_hash: str):
 @app.route("/", methods=['GET'])
 def main_page():
   return flask.render_template("index.html")
+
+
+if __name__ == '__main__':
+  extractor = Extractor()

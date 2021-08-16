@@ -1,16 +1,18 @@
+import os
 import re
 from typing import Set
 
 import validators
 
-from errors import URLError
+from service.errors import URLError
 
 
 class Util:
 
   def __init__(self) -> None:
+    config_dir = os.environ.get("CONFIG_DIR")
     # load blacklisted URLs as regex, for validation
-    with open("config/blacklist.txt") as f:
+    with open(f"{config_dir}/blacklist.txt") as f:
       self.blacklist = re.compile("|".join(sorted(map(str.strip, f.readlines()))), re.I)
 
   def canonicalize_url(self, url: str) -> str:
@@ -19,6 +21,7 @@ class Util:
     Returns None for malformed URLs
 
     :return: Canonical URL (or None)
+
     """
     # sanitize URL
     url = url.strip(" /\n'\".").replace(" ", "%20")
@@ -42,6 +45,7 @@ class Util:
 
     :param url: URL to validate
     :raise InvalidURLException: when URL is invalid
+
     """
     # validate against blacklist
     if self.blacklist.search(url):
@@ -55,21 +59,24 @@ class Util:
   @staticmethod
   def has_match(x: str, pool: Set[str]):
     """
-    Return whether the URL x has sub/super string matches in pool
-    :param x: URL to check for uniqueness
-    :param pool: pool of URLs to check uniqueness against
-    :return: True if url is unique, else False
+    Return whether the URL ``x`` matches some URL ``u`` in ``pool`` (i.e., whether ``x`` or ``u`` is a substring of the other).
+
+    :param x: URL to match
+    :param pool: pool of URLs to match x against
+    :return: True if x matches some URL in pool, else False
+
     """
     return any((x[8:] in y[8:]) or (y[8:] in x[8:]) for y in pool)
 
   @staticmethod
   def pick_uniq_urls(pool: Set[str], prefer_long=False):
     """
-    Return a subset of unique URLs from pool (favors shorter URLs by default)
+    Return a subset of unique URLs from ``pool`` (favors shorter URLs by default)
 
     :param pool: pool of URLs
     :param prefer_long: Whether to favor short URLs (default) or long URLs
-    :return: subset of unique URLs
+    :return: a subset of URLs
+
     """
     uniq_urls = set()
     for url in sorted(pool, key=len, reverse=prefer_long):
@@ -80,11 +87,11 @@ class Util:
   @staticmethod
   def pick_new_urls(pool: Set[str], ignore_list: Set[str]) -> Set[str]:
     """
-    Return a subset of URLs from pool that are not in the ignore_list
+    Return a subset of URLs from ``pool`` that does not match any URL in ``ignore_list``
 
     :param pool: pool of URLs
     :param ignore_list: list of URLs to ignore
-    :return: subset of new URLs
+    :return: a subset of URLs
+
     """
-    # return subset of uniq_urls that are not in blacklist
     return set(url for url in pool if not Util.has_match(url, ignore_list))
