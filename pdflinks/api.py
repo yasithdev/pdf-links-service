@@ -195,39 +195,46 @@ def robustify():
 
   def generate():
     mappings = {}
-    # robustify the given uris
+    # robustify given uris
     for uri in uris:
       uri = uri.strip()
       res = requests.get(f"http://robustlinks.mementoweb.org/api/",
                          params={"url": uri},
                          headers={"Accept": "application/json"})
       try:
-        res_json = res.json()
+        # try converting response to JSON
+        res_json: dict = res.json()
+      except json.JSONDecodeError:
+        # response is not JSON, handle accordingly
+        payload = {
+          "ok": False,
+          "uri": uri,
+          "error": f"Unknown response (Not JSON) from Robust Links API for URI {uri} ({res.status_code})"
+        }
+      else:
+        # response is JSON, handle accordingly
         if 'robust_links_html' in res_json:
+          # handle responses with 'robust_links_html'
           payload = {
-            "ok": True,
+            "ok": res.ok,
             "uri": uri,
             "href_uri_r": res_json['robust_links_html']['original_url_as_href'],
             "href_uri_m": res_json['robust_links_html']['memento_url_as_href'],
           }
         elif 'friendly error' in res_json:
+          # handle responses with 'friendly error'
           payload = {
-            "ok": False,
+            "ok": res.ok,
             "uri": uri,
-            "error": res_json['friendly error'].strip()
+            "error": f"{res_json['friendly error'].strip()} ({res.status_code})"
           }
         else:
+          # response does not have expected fields
           payload = {
             "ok": False,
             "uri": uri,
-            "error": "Unknown Error from Robust Links API"
+            "error": f"Unknown response (JSON) from Robust Links API for URI {uri} ({res.status_code})"
           }
-      except json.JSONDecodeError:
-        payload = {
-          "ok": False,
-          "uri": uri,
-          "error": f"Error decoding response (JSON) from Robust Links API for URI {uri}"
-        }
       # append the payload into a dict, for saving later
       mappings[uri] = payload
       app.logger.info(payload)
