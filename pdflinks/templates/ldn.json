@@ -40,6 +40,6 @@
   "target": {
     "id": "{{target_url}}",
     "ldp:inbox": "{{ldn_inbox_url}}",
-    "type": "System"
+    "type": "Service"
   }
 }
