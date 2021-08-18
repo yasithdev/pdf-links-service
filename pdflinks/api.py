@@ -13,7 +13,7 @@ from .extractor import Extractor
 app = flask.Flask(__name__)
 app.config['UPLOADS_FOLDER'] = './pdfs'
 app.config['MAPPING_FOLDER'] = './mappings'
-app.config['DOCS_FOLDER'] = '../docs/_build/singlehtml'
+app.config['DOCS_FOLDER'] = '../docs/_build/html'
 extractor = Extractor()
 
 ERR_MSG_TITLE = "Error!"
