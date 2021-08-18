@@ -209,7 +209,7 @@ def robustify():
         payload = {
           "ok": False,
           "uri": uri,
-          "error": f"Unknown response (Not JSON) from Robust Links API for URI {uri} ({res.status_code})"
+          "error": f"Robust Links API returned a Non-JSON (HTTP {res.status_code}) for URI {uri}"
         }
       else:
         # response is JSON, handle accordingly
@@ -218,22 +218,22 @@ def robustify():
           payload = {
             "ok": res.ok,
             "uri": uri,
-            "href_uri_r": res_json['robust_links_html']['original_url_as_href'],
-            "href_uri_m": res_json['robust_links_html']['memento_url_as_href'],
+            "href_uri_r": res_json['robust_links_html']['original_url_as_href'].strip(),
+            "href_uri_m": res_json['robust_links_html']['memento_url_as_href'].strip(),
           }
         elif 'friendly error' in res_json:
           # handle responses with 'friendly error'
           payload = {
             "ok": res.ok,
             "uri": uri,
-            "error": f"{res_json['friendly error'].strip()} ({res.status_code})"
+            "error": f"{res_json['friendly error'].strip()} (HTTP {res.status_code})"
           }
         else:
           # response does not have expected fields
           payload = {
             "ok": False,
             "uri": uri,
-            "error": f"Unknown response (JSON) from Robust Links API for URI {uri} ({res.status_code})"
+            "error": f"Robust Links API returned an unknown JSON (HTTP {res.status_code}) for URI {uri}"
           }
       # append the payload into a dict, for saving later
       mappings[uri] = payload
