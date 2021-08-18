@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<head>
+  <!-- title -->
+  <title>PDF Links Service</title>
+  <!-- favicon -->
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <!-- meta -->
+  <meta charset="UTF-8">
+  <meta content="width=device-width,initial-scale=1.0" name="viewport">
+  <!-- css -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static',filename='style.css') }}" rel="stylesheet">
+  <!-- js -->
+  <script rel="script" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark mb-2">
+  <a class="navbar-brand ms-2" href="/">PDF Links Service</a>
+  <a class="btn btn-light me-2" target="_blank" href="/docs">Docs</a>
+</nav>
+<div class="container">
+  <h2>Preview Generated from LDN</h2>
+  <p>This window displays a preview of the PDF and its robustified links, which is generated from the LDN</p>
+  <div class="row">
+    <div class="col-12 col-lg-6">
+      <h3>PDF</h3>
+      <embed src="{{ pdf_url }}" width="100%" height="800px"/>
+    </div>
+    <div class="col-12 col-lg-6 mt-2 mt-lg-0">
+      <h3>Robustified Links</h3>
+      <div id="links"></div>
+    </div>
+  </div>
+</div>
+<script async>
+  const links = document.getElementById("links");
+  const response = fetch("{{ mappings_url }}")
+    .then(res => res.json())
+    .then(json => {
+
+      // first, render passed mappings
+      Object.keys(json).filter(uri => json[uri].ok).forEach(uri => {
+        links.innerHTML += String.raw`
+<div class="card mb-2">
+<div class="card-body">
+<h5 class="card-title">${uri}</h5>
+<h6 class="card-subtitle text-success">Robustified</h6>
+<p class="card-text mt-2">
+URI-R: ${json[uri]['href_uri_r']}<br>
+URI-M: ${json[uri]['href_uri_m']}
+</p>
+</div>
+</div>`;
+      });
+      // next, render failed mappings
+      Object.keys(json).filter(uri => !json[uri].ok).forEach(uri => {
+        links.innerHTML += String.raw`
+<div class="card mb-2">
+<div class="card-body">
+<h5 class="card-title">${uri}</h5>
+<h6 class="card-subtitle text-warning">Not Robustified</h6>
+<p class="card-text mt-2">
+Error: ${json[uri]['error']}
+</p>
+</div>
+</div>`;
+      })
+
+    });
+</script>
+</body>

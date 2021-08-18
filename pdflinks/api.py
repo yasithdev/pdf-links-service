@@ -198,7 +198,9 @@ def robustify():
     # robustify the given uris
     for uri in uris:
       uri = uri.strip()
-      res = requests.get(f"http://robustlinks.mementoweb.org/api/", {"url": uri})
+      res = requests.get(f"http://robustlinks.mementoweb.org/api/",
+                         params={"url": uri},
+                         headers={"Accept": "application/json"})
       try:
         res_json = res.json()
         if 'robust_links_html' in res_json:
@@ -228,6 +230,7 @@ def robustify():
         }
       # append the payload into a dict, for saving later
       mappings[uri] = payload
+      app.logger.info(payload)
       # stream progress for each uri
       yield json.dumps(payload) + "\n"
     # save mappings to file
@@ -312,9 +315,28 @@ def send_ldn(pdf_hash: str):
   # Get LDN inbox URL
   ldn_inbox_url = res.links[ldn_inbox_rel]['url']
   # Send LDN
-  message = get_ldn(pdf_hash, {'target_url': to, 'ldn_inbox_url': ldn_inbox_url}).get_json()
+  message = get_ldn(pdf_hash, **{'target_url': to, 'ldn_inbox_url': ldn_inbox_url}).get_json()
   res = requests.post(ldn_inbox_url, json=message, headers={'Content-Type': 'application/ld+json'})
   return flask.make_response(res.content, res.status_code)
+
+
+@app.route("/preview/<pdf_hash>", methods=['GET'])
+def ldn_preview(pdf_hash: str):
+  """
+  Route to preview the result from a LDN with ``URI-R -> URI-M`` mappings for a PDF.
+
+  This function intercepts ``GET`` requests to ``/preview/<pdf_hash>``.
+  It attempts to get the LDN payload matching the PDF hash.
+  Upon found, it returns a ``200 OK`` HTTP response displaying the PDF and the robustified links.
+  If not found, it returns a ``404 Not Found`` response.
+
+  :param pdf_hash: MD5 hash of an uploaded PDF to which the mappings correspond to
+  :return: An HTTP Response
+
+  """
+  # Get LDN
+  ldn = get_ldn(pdf_hash, **{'target_url': "", 'ldn_inbox_url': ""}).get_json()
+  return flask.render_template("preview.html", pdf_url=ldn['origin']['url'], mappings_url=ldn['object']['url'])
 
 
 @app.route("/", methods=['GET'])

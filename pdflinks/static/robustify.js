@@ -152,3 +152,11 @@ function sendLDN(filename, addr) {
     body: JSON.stringify({to: addr})
   }).then(res => res.status)
 }
+
+function previewLDN(filename, addr) {
+  return fetch(`/ldn/${filename}`, {
+    method: "post",
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({to: addr})
+  }).then(res => res.status)
+}
