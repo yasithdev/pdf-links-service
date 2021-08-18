@@ -388,9 +388,12 @@ def get_docs_page(path: str):
 
 def __file_creation_timestamp(fp: str):
   """
+
   Try to get the date that a file was created, falling back to when it was
   last modified if that isn't possible.
+
   See http://stackoverflow.com/a/39501288/1709587 for explanation.
+
   """
   if platform.system() == 'Windows':
     return os.path.getctime(fp)
