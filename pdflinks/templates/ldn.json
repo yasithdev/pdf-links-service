@@ -38,8 +38,8 @@
     "url": "{{hostname}}/pdfs/{{pdf_hash}}"
   },
   "target": {
-    "id": "{{target_url}}",
-    "ldp:inbox": "{{ldn_inbox_url}}",
+    "id": "{{ld_server_url}}",
+    "ldp:inbox": "{{ldp_inbox_url}}",
     "type": "Service"
   }
 }

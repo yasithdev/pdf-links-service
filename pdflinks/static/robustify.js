@@ -163,5 +163,11 @@ function sendLDN(pdf_hash, element_id) {
     method: "post",
     headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
     body: JSON.stringify({ld_server_url: ld_server_url})
-  }).then(res => res.status)
+  }).then(res => {
+    if (!res.ok) {
+      return Promise.reject(res.status);
+    } else {
+      return res.status;
+    }
+  })
 }

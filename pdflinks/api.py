@@ -20,7 +20,7 @@ ERR_TITLE = "Error!"
 ERR_REQ_NOT_JSON = "Expected JSON payload"
 ERR_PDF_NOT_FOUND = "The requested PDF file was not found"
 ERR_PDF_META_NOT_FOUND = "The metadata for the requested PDF file was not found. Please try uploading the PDF again to generate metadata."
-ERR_MAPPING_NOT_FOUND = "The requested mappings do not exist"
+ERR_MAPPING_NOT_FOUND = "This PDF does not have any saved URI-R > URI-M mappings"
 ERR_ONLY_PDF_ALLOWED = "You are only allowed to upload PDF files"
 ERR_MALFORMED_LDN = "The LDN is malformed"
 ERR_MISSING_PARAM_FILE = "Missing required parameter 'file'"
@@ -47,7 +47,7 @@ def __make_error_response(status: int, message: str):
   if mimes.accept_html:
     body = flask.render_template('error.html', title=ERR_TITLE, message=message)
   elif mimes.accept_json:
-    body = {"timestamp": datetime.datetime.utcnow().isoformat(), "error": message}
+    body = {"ok": False, "timestamp": datetime.datetime.utcnow().isoformat(), "error": message}
   else:
     body = message
   return flask.make_response(body, status)
@@ -423,7 +423,7 @@ def __generate_ldn_payload(pdf_hash: str, ld_server_url: str, ldp_inbox_url: str
   # get published time (if exists)
   mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
   if not os.path.exists(mapping_path):
-    published_time = ""
+    return flask.abort(__make_error_response(404, ERR_MAPPING_NOT_FOUND))
   else:
     published_time = datetime.datetime.fromtimestamp(__get_file_creation_timestamp(mapping_path)).isoformat()
   # generate LDN payload
@@ -473,5 +473,5 @@ def __resolve_ldp_inbox_url(ld_server_url: str):
   # Get LDP Inbox URL from Link Header
   ldn_inbox_rel = "http://www.w3.org/ns/ldp#inbox"
   if ldn_inbox_rel not in res.links:
-    return flask.jsonify({"ok": False, "error": f"The URL {ld_server_url} is not an LD Server"})
+    return flask.abort(__make_error_response(400, f"The URL {ld_server_url} is not an LD Server"))
   return res.links[ldn_inbox_rel]['url']
