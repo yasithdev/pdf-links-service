@@ -17,25 +17,6 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.min.css"
         rel="stylesheet"/>
   <script rel="script" src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
-  <script>
-    // noinspection JSFileReferences
-    require.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs'}});
-    getLDN('{{filename}}').then(value => {
-      require(["vs/editor/editor.main"], () => {
-        window.ldnEditor = monaco.editor.create(document.getElementById('ldn-msg'), {
-          value: value,
-          language: 'json',
-          theme: 'vs-light',
-          minimap: {enabled: false},
-          scrollBeyondLastLine: false,
-          glyphMarginWidth: 0,
-          lineDecorationsWidth: 0,
-          lineNumbersMinChars: 3,
-          lineNumbersMaxChars: 3,
-        });
-      });
-    })
-  </script>
 </head>
 <body>
 <nav class="navbar navbar-dark bg-dark mb-2">
@@ -76,32 +57,36 @@
         <span id="progress">(Once you begin to robustify, your progress will show here)</span>
         <span class="spinner-border spinner-border-sm text-primary d-none ml-1" id="spinner" role="status"></span>
       </p>
-      <div class="w-100 small b-1 d-flex flex-column flex-grow-1 mb-1" id="log"></div>
-      <button class="btn btn-primary btn-sm w-100"
-              onclick="getLDN('{{ filename }}').then(value => window.ldnEditor.setValue(value))" type="button">
-        Get LDN Message
-      </button>
+      <div class="w-100 small b-1 d-flex flex-column flex-grow-1" id="log"></div>
     </div>
   </div>
   <div class="row">
     <div class="col">
-      <h2>Linked Data Notification</h2>
-      <div>This section will let you send a LDN to a specified receiver</div>
-      <div class="my-3">
-        <label class="form-label" for="ldn-msg"><b>Preview</b></label>
-        <div class="b-1 p-1 mb-1 w-100 overflow-hidden" id="ldn-msg" style="height:320px;"></div>
-        <label class="form-label" for="ldn-url"><b>URL</b></label>
-        <input class="form-control form-control-sm mb-1" id="ldn-url" name="ldn-url" type="url"
+      <h2>Notify Robustification</h2>
+      <div>This section will let you send a Linked Data (LD) Notification to an LD Server</div>
+      <label class="form-label mt-2" for="ld-server-url"><b>LD Server URL</b></label>
+      <div class="input-group input-group-sm mb-2">
+        <input class="form-control" id="ld-server-url" name="ld-server-url" type="url"
                value="http://160.1.118.115:8088">
+        <button class="btn btn-primary"
+                onclick="getLDN('{{ filename }}', 'ld-server-url').then(value => window.ldnEditor.setValue(value))"
+                type="button">
+          Preview LDN
+        </button>
+      </div>
+      <div class="my-3">
+        <label class="form-label" for="ldn-msg"><b>LDN Preview</b></label>
+        <div class="b-1 p-1 mb-1 w-100 overflow-hidden" id="ldn-msg" style="height:320px;"></div>
         <div class="d-flex flex-row">
           <button class="btn btn-success btn-sm my-1 w-100 me-1"
-                  onclick="sendLDN('{{ filename }}',document.getElementById('ldn-url').value).then(_ => showToast('ldnSentToast')).catch(_ => showToast('ldnFailToast'))"
+                  onclick="sendLDN('{{ filename }}', 'ld-server-url').then(_ => showToast('ldnSentToast')).catch(_ => showToast('ldnFailToast'))"
                   type="button">
             Send LDN
           </button>
-          <a class="btn btn-primary btn-sm my-1 w-100 ms-1" type="button" href="/preview/{{ filename }}">
-            Preview LDN
-          </a>
+          <button class="btn btn-primary btn-sm my-1 w-100 ms-1" type="button"
+                  onclick="previewLDN(window.ldnEditor.getValue())">
+            Preview Result
+          </button>
         </div>
       </div>
     </div>
@@ -135,5 +120,24 @@
     </div>
   </div>
 </div>
+<script>
+  const url = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs';
+  require.config({paths: {'vs': url}});
+  getLDN('{{filename}}', 'ld-server-url').then(value => {
+    require(["vs/editor/editor.main"], () => {
+      window.ldnEditor = monaco.editor.create(document.getElementById('ldn-msg'), {
+        value: value,
+        language: 'json',
+        theme: 'vs-light',
+        minimap: {enabled: false},
+        scrollBeyondLastLine: false,
+        glyphMarginWidth: 0,
+        lineDecorationsWidth: 0,
+        lineNumbersMinChars: 3,
+        lineNumbersMaxChars: 3,
+      });
+    });
+  })
+</script>
 </body>
 

@@ -79,7 +79,7 @@ function bs_card_fail(uri, err) {
 </div>`;
 }
 
-function robustify(filename, target) {
+function robustify(pdf_hash, target) {
   // declare element variables
   const logEl = document.getElementById("log");
   const progressEl = document.getElementById("progress");
@@ -106,7 +106,7 @@ function robustify(filename, target) {
   fetch("/robustify", {
     method: "post",
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({filename: filename, uris: urls})
+    body: JSON.stringify({filename: pdf_hash, uris: urls})
   })
     .then(response => response.body.getReader())
     .then(async reader => {
@@ -139,24 +139,26 @@ function robustify(filename, target) {
     })
 }
 
-function getLDN(filename) {
-  return fetch(`/ldn/${filename}`)
+function getLDN(pdf_hash, element_id) {
+  const ld_server_url = document.getElementById(element_id).value;
+  return fetch(`/ldn/${pdf_hash}?ld_server_url=${ld_server_url}`, {headers: {'Accept': 'application/json'}})
     .then(async res => await res.json())
     .then(json => JSON.stringify(json, null, 2));
 }
 
-function sendLDN(filename, addr) {
-  return fetch(`/ldn/${filename}`, {
+function previewLDN(ldn) {
+  return fetch(`/preview`, {
     method: "post",
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({to: addr})
-  }).then(res => res.status)
+    body: ldn,
+  }).then(res => window.location.assign(res.url));
 }
 
-function previewLDN(filename, addr) {
-  return fetch(`/ldn/${filename}`, {
+function sendLDN(pdf_hash, element_id) {
+  const ld_server_url = document.getElementById(element_id).value;
+  return fetch(`/ldn/${pdf_hash}`, {
     method: "post",
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({to: addr})
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    body: JSON.stringify({ld_server_url: ld_server_url})
   }).then(res => res.status)
 }
