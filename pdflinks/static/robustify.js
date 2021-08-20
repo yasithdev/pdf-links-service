@@ -106,19 +106,13 @@ function robustify(pdf_hash, target) {
   fetch("/robustify", {
     method: "post",
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({filename: pdf_hash, uris: urls})
+    body: JSON.stringify({pdf_hash: pdf_hash, uris: urls})
   })
     .then(response => response.body.getReader())
     .then(async reader => {
       while (true) {
         const {done, value} = await reader.read();
-        if (done) {
-          // final update
-          [...urlsEl, target, selectorEl].forEach(e => e.toggleAttribute("disabled", false));
-          spinnerEl.classList.toggle("d-none", true);
-          updateProgress();
-          break;
-        }
+        if (done) break;
         // incremental update
         const res = JSON.parse(decoder.decode(value).trim());
         const uri = res['uri'];
@@ -136,6 +130,15 @@ function robustify(pdf_hash, target) {
         }
         updateProgress();
       }
+    })
+    .catch(err => {
+      console.log("Error from API", err);
+    })
+    .finally(_ => {
+      // final update
+      [...urlsEl, target, selectorEl].forEach(e => e.toggleAttribute("disabled", false));
+      spinnerEl.classList.toggle("d-none", true);
+      updateProgress();
     })
 }
 
