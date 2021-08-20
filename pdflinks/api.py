@@ -349,7 +349,7 @@ def get_docs_page(path: str):
 
 def __call_robust_links_svc(uri: str):
   res = requests.get(f"http://robustlinks.mementoweb.org/api/",
-                     params={"url": uri},
+                     params={"url": uri, "anchor_text": uri},
                      headers={"Accept": "application/json"})
   try:
     # try converting response to JSON

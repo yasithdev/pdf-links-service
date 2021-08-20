@@ -7,13 +7,11 @@
   <!-- meta -->
   <meta charset="UTF-8">
   <meta content="width=device-width,initial-scale=1.0" name="viewport">
-  <!-- css -->
+  <!-- bootstrap (css) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- preview styling (css) -->
   <link href="{{ url_for('static',filename='style.css') }}" rel="stylesheet">
-  <!-- js -->
-  <script rel="script" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- robust links js/css -->
-  <script rel="script" src="https://doi.org/10.25776/h1fa-7a28"></script>
+  <!-- robust links service (css) -->
   <link rel="stylesheet" href="https://doi.org/10.25776/z58z-r575">
 </head>
 <body>
@@ -30,45 +28,37 @@
       <embed src="{{ pdf_url }}" width="100%" height="800px"/>
     </div>
     <div class="col-12 col-lg-6 mt-2 mt-lg-0">
-      <h3>Robustified Links</h3>
+      <h3>Robust Links</h3>
       <div id="links"></div>
     </div>
   </div>
 </div>
-<script async>
-  const links = document.getElementById("links");
-  const response = fetch("{{ mappings_url }}")
+<!-- bootstrap (js) -->
+<script rel="script" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- robust links service (js) -->
+<script rel="script" src="https://doi.org/10.25776/h1fa-7a28"></script>
+<!-- mappings (js) -->
+<script>
+  fetch("{{ mappings_url }}")
     .then(res => res.json())
-    .then(json => {
-
-      // first, render passed mappings
-      Object.keys(json).filter(uri => json[uri].ok).forEach(uri => {
-        links.innerHTML += String.raw`
-<div class="card mb-2">
-<div class="card-body">
-<h5 class="card-title">${uri}</h5>
-<h6 class="card-subtitle text-success">Robustified</h6>
-<p class="card-text mt-2">
-URI-R: ${json[uri]['href_uri_r']}<br>
-URI-M: ${json[uri]['href_uri_m']}
-</p>
-</div>
-</div>`;
-      });
-      // next, render failed mappings
-      Object.keys(json).filter(uri => !json[uri].ok).forEach(uri => {
-        links.innerHTML += String.raw`
-<div class="card mb-2">
-<div class="card-body">
-<h5 class="card-title">${uri}</h5>
-<h6 class="card-subtitle text-warning">Not Robustified</h6>
-<p class="card-text mt-2">
-Error: ${json[uri]['error']}
-</p>
-</div>
-</div>`;
-      })
-
+    .then(json => Object.keys(json).map(uri => {
+      const v = json[uri];
+      const ok = v['ok'];
+      return String.raw`
+      <div class="card mb-2">
+        <div class="card-body py-1">
+          <p class="card-title">
+            ${ok ? v['href_uri_r'] : String.raw`<a href="${uri}" target="_blank">${uri}</a>`}
+            <span class="text-${ok ? 'success' : 'danger'}">(${ok ? 'Robustified' : 'Not Robustified'})</span>
+          </p>
+          <p class="card-text text-muted small">${ok ? '' : v['error']}</p>
+        </div>
+      </div>`;
+    }).reduce((a, b) => a + b))
+    .then(html => {
+      const links = document.getElementById('links');
+      links.innerHTML = html;
+      RobustLinks.robustify()
     });
 </script>
 </body>
