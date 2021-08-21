@@ -1,6 +1,5 @@
-PDFLinks API
-============
-
+Source Code Docs
+================
 .. toctree::
    :maxdepth: 2
 

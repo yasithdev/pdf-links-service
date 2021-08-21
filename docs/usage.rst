@@ -1,5 +1,5 @@
-Using the Service
-=================
+Using the Web Interface
+=======================
 
 The process begins with uploading a PDF document.
 
