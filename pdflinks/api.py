@@ -15,6 +15,7 @@ app.config['UPLOADS_FOLDER'] = './pdfs'
 app.config['MAPPING_FOLDER'] = './mappings'
 app.config['DOCS_FOLDER'] = '../docs/_build/html'
 extractor = Extractor()
+executor = concurrent.futures.ThreadPoolExecutor(5)
 
 ERR_TITLE = "Error!"
 ERR_REQ_NOT_JSON = "Expected JSON payload"
@@ -174,29 +175,35 @@ def robustify():
   pdf_hash = req_json['pdf_hash']
   uris = req_json['uris']
 
-  def generate():
+  def run():
     # dict of generated mappings
     mappings = {}
-    # robustify given uris (parallelism=5)
-    with concurrent.futures.ThreadPoolExecutor(5) as executor:
-      # list storing future results
-      futures = []
-      # run in parallel
+    # local list storing future results
+    futures = []
+    try:
+      # submit robustification requests
       for uri in uris:
         futures.append(executor.submit(__call_robust_links_svc, uri.strip()))
-      # process each future
+      # process each future as completed
       for future in concurrent.futures.as_completed(futures):
         payload = future.result()
+        uri = payload["uri"]
         # append the payload into a dict, for saving later
         mappings[uri] = payload
-        # stream a JSON response
+        # yield a JSON response
         yield json.dumps(payload) + "\n"
-    # write generated mappings to file
-    mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
-    with open(mapping_path, "w") as f:
-      json.dump(mappings, f)
+    except GeneratorExit:
+      app.logger.info(f"client {flask.request.host_url} disconnected, cleaning up resources.")
+      for future in futures:
+        future.cancel()
+    finally:
+      app.logger.info("writing generated mappings to file.")
+      # write generated mappings to file
+      mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
+      with open(mapping_path, "w") as f:
+        json.dump(mappings, f)
 
-  return app.response_class(generate(), content_type='application/octet-stream')
+  return app.response_class(run(), content_type='application/octet-stream')
 
 
 @app.route("/ldn/<pdf_hash>", methods=['GET'])
