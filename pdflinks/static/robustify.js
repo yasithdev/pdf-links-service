@@ -111,24 +111,35 @@ function robustify(pdf_hash, target) {
     .then(response => response.body.getReader())
     .then(async reader => {
       while (true) {
+        let buffer = "";
         const {done, value} = await reader.read();
         if (done) break;
-        // incremental update
-        const res = JSON.parse(decoder.decode(value).trim());
-        const uri = res['uri'];
-        if (res['ok']) {
-          const href_uri_r = res['href_uri_r'].replaceAll(/[\s\n]+/g, " ");
-          const cp_href_uri_r = "`" + href_uri_r.replaceAll("'", '"') + "`";
-          const href_uri_m = res['href_uri_m'].replaceAll(/[\s\n]+/g, " ");
-          const cp_href_uri_m = "`" + href_uri_m.replaceAll("'", '"') + "`";
-          logEl.innerHTML += bs_card_done(uri, href_uri_r, cp_href_uri_r, href_uri_m, cp_href_uri_m);
-          passUrls.push(uri);
-        } else {
-          const err = res['error'];
-          logEl.innerHTML += bs_card_fail(uri, err);
-          failUrls.push(uri);
+        // append to buffer
+        buffer += decoder.decode(value);
+        while (true) {
+          const breakpoint = buffer.indexOf("\n");
+          if (breakpoint === -1) break;
+          const chunk = buffer.slice(0, breakpoint);
+          buffer = buffer.slice(breakpoint + 1);
+          // skip if chunk is invalid
+          if (chunk.length <= 2 || chunk[0] !== '{' || chunk[chunk.length - 1] !== '}') continue;
+          // incremental update
+          const res = JSON.parse(chunk);
+          const uri = res['uri'];
+          if (res['ok']) {
+            const href_uri_r = res['href_uri_r'].replaceAll(/[\s\n]+/g, " ");
+            const cp_href_uri_r = "`" + href_uri_r.replaceAll("'", '"') + "`";
+            const href_uri_m = res['href_uri_m'].replaceAll(/[\s\n]+/g, " ");
+            const cp_href_uri_m = "`" + href_uri_m.replaceAll("'", '"') + "`";
+            logEl.innerHTML += bs_card_done(uri, href_uri_r, cp_href_uri_r, href_uri_m, cp_href_uri_m);
+            passUrls.push(uri);
+          } else {
+            const err = res['error'];
+            logEl.innerHTML += bs_card_fail(uri, err);
+            failUrls.push(uri);
+          }
+          updateProgress();
         }
-        updateProgress();
       }
     })
     .catch(err => {

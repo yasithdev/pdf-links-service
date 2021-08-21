@@ -1,3 +1,4 @@
+import concurrent.futures
 import datetime
 import hashlib
 import io
@@ -198,18 +199,28 @@ def robustify():
   pdf_hash = req_json['pdf_hash']
   uris = req_json['uris']
 
+  mappings = {}
+
+  def robustify_single_url(uri):
+    uri = uri.strip()
+    # invoke robust links service and generate response
+    payload = __call_robust_links_svc(uri)
+    # append the payload into a dict, for saving later
+    mappings[uri] = payload
+    app.logger.info(payload)
+    # stream progress for each uri
+    return json.dumps(payload)
+
   def generate():
-    mappings = {}
-    # robustify given uris
-    for uri in uris:
-      uri = uri.strip()
-      # invoke robust links service and generate response
-      payload = __call_robust_links_svc(uri)
-      # append the payload into a dict, for saving later
-      mappings[uri] = payload
-      app.logger.info(payload)
-      # stream progress for each uri
-      yield json.dumps(payload) + "\n"
+    # robustify given uris (parallelism=4)
+    with concurrent.futures.ThreadPoolExecutor(4) as executor:
+      futures = []
+      # run in parallel
+      for uri in uris:
+        futures.append(executor.submit(robustify_single_url, uri))
+      for future in concurrent.futures.as_completed(futures):
+        yield future.result() + "\n"
+
     # save mappings to file
     mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
     with open(mapping_path, "w") as f:
@@ -368,8 +379,8 @@ def __call_robust_links_svc(uri: str):
       return {
         "ok": res.ok,
         "uri": uri,
-        "href_uri_r": res_json['robust_links_html']['original_url_as_href'].strip(),
-        "href_uri_m": res_json['robust_links_html']['memento_url_as_href'].strip(),
+        "href_uri_r": res_json['robust_links_html']['original_url_as_href'].replace('\n', '').strip(),
+        "href_uri_m": res_json['robust_links_html']['memento_url_as_href'].replace('\n', '').strip(),
       }
     elif 'friendly error' in res_json:
       # handle responses with 'friendly error'

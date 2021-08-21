@@ -41,20 +41,22 @@
 <script>
   fetch("{{ mappings_url }}")
     .then(res => res.json())
-    .then(json => Object.keys(json).map(uri => {
-      const v = json[uri];
-      const ok = v['ok'];
-      return String.raw`
+    .then(json => Object.keys(json)
+      .sort((a, b) => (json[a]['ok'] < json[b]['ok']) ? 1 : (json[a]['ok'] > json[b]['ok']) ? -1 : 0)
+      .map(uri => {
+        const v = json[uri];
+        const ok = v['ok'];
+        return String.raw`
       <div class="card mb-2">
         <div class="card-body py-1">
-          <p class="card-title">
+          <p class="card-title text-${ok ? 'success' : 'danger'}">
             ${ok ? v['href_uri_r'] : String.raw`<a href="${uri}" target="_blank">${uri}</a>`}
-            <span class="text-${ok ? 'success' : 'danger'}">(${ok ? 'Robustified' : 'Not Robustified'})</span>
+            <span>(${ok ? 'Robustified' : 'Not Robustified'})</span>
           </p>
           <p class="card-text text-muted small">${ok ? '' : v['error']}</p>
         </div>
       </div>`;
-    }).reduce((a, b) => a + b))
+      }).reduce((a, b) => a + b))
     .then(html => {
       const links = document.getElementById('links');
       links.innerHTML = html;
