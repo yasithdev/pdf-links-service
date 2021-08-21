@@ -4,7 +4,6 @@ import hashlib
 import io
 import json
 import os
-import platform
 
 import flask
 import requests
@@ -430,29 +429,24 @@ def __call_robust_links_svc(uri: str):
       }
 
 
-def __get_file_creation_timestamp(fp: str):
-  """
-  Try to get the date that a file was created, falling back to when it was last modified if that isn't possible.
-
-  **Source:** http://stackoverflow.com/a/39501288/1709587
-
-  :param fp: path to the file
-  :return: the creation timestamp (windows/macos) or last modified timestamp (linux)
-
-  """
-  if platform.system() == 'Windows':
-    return os.path.getctime(fp)
-  else:
-    stat = os.stat(fp)
-    try:
-      return stat.st_birthtime
-    except AttributeError:
-      # We're probably on Linux. No easy way to get creation dates here,
-      # so we'll settle for when its content was last modified.
-      return stat.st_mtime
-
-
 def __generate_ldn_payload(pdf_hash: str, ld_server_url: str, ldp_inbox_url: str):
+  """
+  Generate an LDN payload for a PDF, given the ``pdf_hash``, ``ld_server_url``, and ``ldp_inbox_url``.
+
+  This function checks if the PDF exists and if not, returns a ``400 Bad Request`` HTTP response.
+  Next, it checks if the PDF metadata exists and if not, returns a ``400 Bad Request`` HTTP response.
+  Upon doing so, it gets the original PDF name from the metadata.
+
+  Next, it checks if URI-R -> URI-M mappings exists for the PDF and if not, returns a ``400 Bad Request`` HTTP response.
+  Upon doing so, it gets the last modified time of the URI-R -> URI-M mappings.
+  Using this information, it generates the LDN payload and returns it with a ``200 OK`` HTTP response.
+
+  :param pdf_hash: MD5 hash of an uploaded PDF
+  :param ld_server_url: URL of the Linked Data (LD) Server
+  :param ldp_inbox_url: URL of the LDP inbox of the given LD Server
+  :return: An LDN as a JSON response
+
+  """
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
@@ -464,19 +458,19 @@ def __generate_ldn_payload(pdf_hash: str, ld_server_url: str, ldp_inbox_url: str
   # get the original pdf name from metadata
   with open(pdf_meta_path) as f:
     pdf_name = f.readline()
-  # get published time (if exists)
+  # assert that the URI-R -> URI-M mappings exist for the PDF
   mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
   if not os.path.exists(mapping_path):
     return flask.abort(__make_error_response(404, ERR_MAPPING_NOT_FOUND))
-  else:
-    published_time = datetime.datetime.fromtimestamp(__get_file_creation_timestamp(mapping_path)).isoformat()
+  # last modified time of the URI-R -> URI-M mappings
+  mapping_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(mapping_path)).isoformat()
   # generate LDN payload
   ldn_args = {
     'hostname': flask.request.host_url.strip(' /'),
     'pdf_hash': pdf_hash,
     'pdf_name': pdf_name,
     'created_time': datetime.datetime.now().isoformat(),
-    'published_time': published_time,
+    'published_time': mapping_mtime,
     'ld_server_url': ld_server_url,
     'ldp_inbox_url': ldp_inbox_url
   }
@@ -486,6 +480,14 @@ def __generate_ldn_payload(pdf_hash: str, ld_server_url: str, ldp_inbox_url: str
 
 
 def __get_request_body_as_json():
+  """
+  Parse the request body as JSON, and return the parsed object.
+
+  If the body cannot be parsed as JSON, it returns a ``400 Bad Request`` HTTP response.
+
+  :return: Parsed Request body as an object
+
+  """
   try:
     # try generating JSON from request body
     return flask.request.get_json()
@@ -495,6 +497,15 @@ def __get_request_body_as_json():
 
 
 def __get_ld_server_url_from_request_body(key='ld_server_url'):
+  """
+  Parse the request body as JSON, and return the LD server URL given in it.
+
+  If the body cannot be parsed as JSON, or if ``key`` does not exist, it returns a ``400 Bad Request`` HTTP response.
+
+  :param key: Key to extract from request body (default='ld_server_url`)
+  :return: The LD Server URL given in the request body
+
+  """
   # get request body as JSON
   req_json = __get_request_body_as_json()
   # assert that LD server URL exists in request body
@@ -504,6 +515,15 @@ def __get_ld_server_url_from_request_body(key='ld_server_url'):
 
 
 def __get_ld_server_url_from_query_params(key='ld_server_url'):
+  """
+  Parse the request query params and return the LD server URL given in it.
+
+  If ``key`` does not exist in the request query params, it returns a ``400 Bad Request`` HTTP response.
+
+  :param key: Key to extract from request query params (default='ld_server_url`)
+  :return: The LD Server URL given in the request query params
+
+  """
   # assert that LD server URL exists in request query params
   if key not in flask.request.args:
     return flask.abort(__make_error_response(400, ERR_MISSING_PARAM_LD_SERVER_URL))
@@ -512,6 +532,17 @@ def __get_ld_server_url_from_query_params(key='ld_server_url'):
 
 
 def __resolve_ldp_inbox_url(ld_server_url: str):
+  """
+  Return the URL of the LDP inbox of the Linked Data (LD) service found at the ``ld_server_url``.
+
+  This function performs a HEAD request to the ``ld_server_url``, and parses the link headers of the response.
+  If a LDP inbox URL is found in the link header, it returns it.
+  If not found, it returns a ``400 Bad Request`` HTTP response.
+
+  :param ld_server_url: URL of the Linked Data (LD) server
+  :return: The URL of the LDP inbox of the LD server
+
+  """
   # Send HTTP HEAD request to LD Server URL
   res = requests.head(ld_server_url)
   # Get LDP Inbox URL from Link Header
