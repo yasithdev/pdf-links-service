@@ -385,19 +385,19 @@ def __call_robust_links_svc(uri: str):
   """
 
   # log the function call
-  app.logger.info(f"Submitted request to RL Service for URL: {uri}")
+  app.logger.info(f"Submitted request to RL service for URL: {uri}")
 
   # send the request
   params = {"url": uri, "anchor_text": uri}
   headers = {"Accept": "application/json"}
   res = requests.get(f"http://robustlinks.mementoweb.org/api/", params=params, headers=headers)
 
-  def error_response(__errmsg: str):
+  def error_res(__errmsg: str):
     app.logger.warn(__errmsg)
     return {"ok": False, "uri": uri, "error": __errmsg}
 
-  def success_response(__rl: any, __uri_r_key='original_url_as_href', __uri_m_key='memento_url_as_href'):
-    app.logger.info(f"RL Service robustified URL: {uri}")
+  def success_res(__rl: any, __uri_r_key='original_url_as_href', __uri_m_key='memento_url_as_href'):
+    app.logger.info(f"RL service robustified URL: {uri}")
     return {"ok": True, "uri": uri, "href_uri_r": minify(__rl[__uri_r_key]), "href_uri_m": minify(__rl[__uri_m_key])}
 
   def minify(html: str):
@@ -408,18 +408,19 @@ def __call_robust_links_svc(uri: str):
     res_json: dict = res.json()
   except json.JSONDecodeError:
     # if the response is not JSON
-    return error_response(f"Robust Links API returned a Non-JSON (HTTP {res.status_code}) for URI {uri}")
+    return error_res(f"RL service returned HTTP {res.status_code} with a non JSON response for URI: {uri}")
   else:
     # if the response is JSON
     if 'robust_links_html' in res_json:
       # handle responses with 'robust_links_html'
-      return success_response(res_json['robust_links_html'])
+      return success_res(res_json['robust_links_html'])
     elif 'friendly error' in res_json:
       # handle responses with 'friendly error'
-      return error_response(f"{res_json['friendly error'].strip()} (HTTP {res.status_code})")
+      errmsg = res_json['friendly error'].strip()
+      return error_res(f"RL service returned HTTP {res.status_code} for URI: {uri}. Message: {errmsg}")
     else:
       # handle responses that do not have the expected fields
-      return error_response(f"Robust Links API returned an unknown JSON (HTTP {res.status_code}) for URI {uri}")
+      return error_res(f"RL service returned HTTP {res.status_code} with an unknown JSON response for URI: {uri}")
 
 
 def __generate_ldn_payload(pdf_hash: str, ld_server_url: str, ldp_inbox_url: str):
