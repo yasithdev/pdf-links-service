@@ -30,30 +30,6 @@ ERR_MISSING_PARAM_PDF_URL = "Missing required query parameter 'pdf_url'"
 ERR_MISSING_PARAM_MAPPING_URL = "Missing required query parameter 'mapping_url'"
 
 
-def __make_error_response(status: int, message: str):
-  """
-  Generate an error response.
-
-  If the request accepts HTML, the error will be rendered as a HTML page.
-  Instead, if the request accepts JSON, the error will be rendered as JSON.
-  If neither, the error will be rendered as plain text.
-
-  :param status: HTTP status code
-  :param message: Message included in the error response
-  :return: An HTTP response with the given status and message
-
-  """
-
-  mimes = flask.request.accept_mimetypes
-  if mimes.accept_html:
-    body = flask.render_template('error.html', title=ERR_TITLE, message=message)
-  elif mimes.accept_json:
-    body = {"ok": False, "timestamp": datetime.datetime.utcnow().isoformat(), "error": message}
-  else:
-    body = message
-  return flask.make_response(body, status)
-
-
 @app.route('/pdfs', methods=['POST'])
 def upload_pdf():
   """
@@ -199,29 +175,25 @@ def robustify():
   pdf_hash = req_json['pdf_hash']
   uris = req_json['uris']
 
-  mappings = {}
-
-  def robustify_single_url(uri):
-    uri = uri.strip()
-    # invoke robust links service and generate response
-    payload = __call_robust_links_svc(uri)
-    # append the payload into a dict, for saving later
-    mappings[uri] = payload
-    app.logger.info(payload)
-    # stream progress for each uri
-    return json.dumps(payload)
-
   def generate():
-    # robustify given uris (parallelism=4)
-    with concurrent.futures.ThreadPoolExecutor(4) as executor:
+    # dict of generated mappings
+    mappings = {}
+    # robustify given uris (parallelism=5)
+    with concurrent.futures.ThreadPoolExecutor(5) as executor:
+      # list storing future results
       futures = []
       # run in parallel
       for uri in uris:
-        futures.append(executor.submit(robustify_single_url, uri))
+        futures.append(executor.submit(__call_robust_links_svc, uri.strip()))
+      # process each future
       for future in concurrent.futures.as_completed(futures):
-        yield future.result() + "\n"
-
-    # save mappings to file
+        payload = future.result()
+        # append the payload into a dict, for saving later
+        mappings[uri] = payload
+        # log the payload
+        app.logger.info(payload)
+        yield json.dumps(payload) + "\n"
+    # write generated mappings to file
     mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
     with open(mapping_path, "w") as f:
       json.dump(mappings, f)
@@ -232,7 +204,7 @@ def robustify():
 @app.route("/ldn/<pdf_hash>", methods=['GET'])
 def get_ldn_json(pdf_hash: str):
   """
-  Route to generate an LDN payload which notifies the existence of ``URI-R -> URI-M`` mappings for a PDF.
+  Route to get an LDN payload which notifies the existence of ``URI-R -> URI-M`` mappings for a PDF.
 
   This function intercepts ``GET`` requests to ``/ldn/<pdf_hash>``.
   It looks for a PDF that matches the given hash.
@@ -240,7 +212,6 @@ def get_ldn_json(pdf_hash: str):
   If not, it returns a ``404 Not Found`` response.
 
   :param pdf_hash: MD5 hash of an uploaded PDF to which the mappings correspond to
-  :param ldn_args: optional args to use when generating the LDN payload
   :return: An HTTP Response
 
   """
@@ -307,6 +278,17 @@ def request_ldn_preview():
 
 @app.route("/preview", methods=['GET'])
 def get_ldn_preview():
+  """
+  Route to get a preview of a PDF and its ``URI-R -> URI-M`` mappings.
+
+  This function intercepts ``GET`` requests to ``/preview``.
+  It expects two query parameters, namely, ``pdf_url`` (i.e., the URL of a PDF) and ``mapping_url`` (i.e., the URI-R -> URI-M mappings for URIs in that PDF).
+  If any of these parameters are not found, it will return a ``400 Bad Request`` HTTP response.
+  If both parameters exist, it will return a ``200 OK`` HTTP response with the preview page HTML.
+
+  :return: An HTTP Response
+
+  """
   # get query params
   params = flask.request.args
   if 'pdf_url' not in params:
@@ -358,22 +340,72 @@ def get_docs_page(path: str):
   return flask.send_from_directory(app.config['DOCS_FOLDER'], path)
 
 
+def __make_error_response(status: int, message: str):
+  """
+  Generate an error response.
+
+  If the request accepts HTML, the error will be rendered as a HTML page.
+  Instead, if the request accepts JSON, the error will be rendered as JSON.
+  If neither, the error will be rendered as plain text.
+
+  :param status: HTTP status code
+  :param message: Message included in the error response
+  :return: An HTTP response with the given status and message
+
+  """
+
+  mimes = flask.request.accept_mimetypes
+  if mimes.accept_html:
+    body = flask.render_template('error.html', title=ERR_TITLE, message=message)
+  elif mimes.accept_json:
+    body = {"ok": False, "timestamp": datetime.datetime.utcnow().isoformat(), "error": message}
+  else:
+    body = message
+  return flask.make_response(body, status)
+
+
 def __call_robust_links_svc(uri: str):
-  res = requests.get(f"http://robustlinks.mementoweb.org/api/",
-                     params={"url": uri, "anchor_text": uri},
-                     headers={"Accept": "application/json"})
+  """
+  Call the Robust Links Service on a URI, and return the status of its robustification.
+
+  A success response has the following fields.
+
+  * ``ok``: always True
+  * ``uri``: The URL which was sent to the Robust Links API
+  * ``href_uri_r``: Robust Link pointing to the original resource
+  * ``href_uri_m``: Robust Link pointing to an archived copy of the original resource (i.e., memento)
+
+  An error response has the following fields.
+
+  * ``ok``: always False
+  * ``uri``: The URL which was sent to the Robust Links API
+  * ``error``: A friendly description of the error
+
+  :param uri: the URL to robustify
+  :return: the status of robustification
+
+  """
+
+  # log the function call
+  app.logger.info(f"Calling RL Service on {uri}")
+
+  # send the request
+  params = {"url": uri, "anchor_text": uri}
+  headers = {"Accept": "application/json"}
+  res = requests.get(f"http://robustlinks.mementoweb.org/api/", params=params, headers=headers)
+
   try:
     # try converting response to JSON
     res_json: dict = res.json()
   except json.JSONDecodeError:
-    # response is not JSON, handle accordingly
+    # if the response is not JSON
     return {
       "ok": False,
       "uri": uri,
       "error": f"Robust Links API returned a Non-JSON (HTTP {res.status_code}) for URI {uri}"
     }
   else:
-    # response is JSON, handle accordingly
+    # if the response is JSON
     if 'robust_links_html' in res_json:
       # handle responses with 'robust_links_html'
       return {
@@ -390,7 +422,7 @@ def __call_robust_links_svc(uri: str):
         "error": f"{res_json['friendly error'].strip()} (HTTP {res.status_code})"
       }
     else:
-      # response does not have expected fields
+      # handle responses that do not have the expected fields
       return {
         "ok": False,
         "uri": uri,
@@ -400,11 +432,12 @@ def __call_robust_links_svc(uri: str):
 
 def __get_file_creation_timestamp(fp: str):
   """
+  Try to get the date that a file was created, falling back to when it was last modified if that isn't possible.
 
-  Try to get the date that a file was created, falling back to when it was
-  last modified if that isn't possible.
+  **Source:** http://stackoverflow.com/a/39501288/1709587
 
-  See http://stackoverflow.com/a/39501288/1709587 for explanation.
+  :param fp: path to the file
+  :return: the creation timestamp (windows/macos) or last modified timestamp (linux)
 
   """
   if platform.system() == 'Windows':

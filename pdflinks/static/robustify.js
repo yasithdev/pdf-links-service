@@ -165,7 +165,7 @@ function previewLDN(ldn) {
     method: "post",
     headers: {'Content-Type': 'application/json'},
     body: ldn,
-  }).then(res => window.location.assign(res.url));
+  }).then(res => window.open(res.url, "_blank"));
 }
 
 function sendLDN(pdf_hash, element_id) {
