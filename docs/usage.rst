@@ -1,6 +1,9 @@
 Using the Web Interface
 =======================
 
+.. image:: /_static/interaction-diagram.png
+   :width: 600
+
 The process begins with uploading a PDF document.
 
 .. image:: /_static/1-upload-pdf.png
