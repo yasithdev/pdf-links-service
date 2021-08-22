@@ -19,7 +19,7 @@ This behavior is observed in two forms:
 similarity with the originally linked content)
 
 The fraction of articles containing references to web resources is growing steadily over time.
-Out of five Science, Technology, and Medicine (STM) articles suffer from reference rot, meaning it is impossible to revisit the web context that surrounds them some time after their publication `[source] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0115253>`_.
+One of five Science, Technology, and Medicine (STM) articles suffer from reference rot, meaning it is impossible to revisit the web context that surrounds them some time after their publication `[source] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0115253>`_.
 
 
 .. toctree::
