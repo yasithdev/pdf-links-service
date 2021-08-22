@@ -13,7 +13,7 @@ What does it mean to "robustify" links?
 ---------------------------------------
 
 Links to the web break all the time.
-Broken links appear in two forms:
+This behavior is observed in two forms:
 1) Link Rot (where following the link yields a HTTP 404 error or equivalent) and
 2) Content Drift (where the content following the link are changed over time, possibly to a point where it loses all
 similarity with the originally linked content)
