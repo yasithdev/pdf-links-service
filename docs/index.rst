@@ -9,7 +9,7 @@ availability of robust links via Linked Data (LD) Notifications.
    :width: 600
 
 
-What does it mean to "robustify" links?
+Why "robustify" links?
 ---------------------------------------
 
 Links to the web break all the time.
