@@ -12,21 +12,16 @@ availability of robust links via Linked Data (LD) Notifications, and preview the
 Why "Robustify" Links in PDFs?
 ---------------------------------------
 
-Links to the web break all the time.
-This behavior is observed in two forms:
+Links to the web can break over time, in two forms:
 
-1) **Link Rot** - Following the link yields a HTTP 404 error or equivalent
-2) **Content Drift** - Content following the link are changed over time, possibly to a point where it loses all similarity with the originally linked content
+1. **Link Rot** - Over time, the referenced web content had gone missing (i.e., it returns a HTTP 404 or equivalent)
+2. **Content Drift** - Over time, the referenced web content had changed, possibly to a point where it's entirely different from the original.
 
-The fraction of articles containing references to web resources (such as URLs) is growing steadily over time.
-Here are some interesting facts from the world of Science, Technology, and Medicine.
+The fraction of scholarly articles that reference web resources (via URLs) is growing steadily over time.
+Here are some interesting facts about scholarly articles in the areas of Science, Technology, and Medicine.
 
-1) *One* in *Five* scholarly articles with URLs suffer from reference rot,
-   meaning it is impossible to revisit the web context that surrounds them some time after their publication.
-   `[1] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0115253>`_
-2) *Three* in *Four* scholarly articles with URLs suffer from content drift,
-   meaning the content referenced by them have drifted away from what they were when originally referenced.
-   `[2] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0167475>`_
+1. *One in five* scholarly articles suffer from *reference rot* `[1] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0115253>`_
+2. *Three in four* scholarly articles suffer from *content drift* `[2] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0167475>`_
 
 
 .. toctree::
