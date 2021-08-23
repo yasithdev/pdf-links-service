@@ -26,6 +26,9 @@ Here are some interesting facts about scholarly articles in the areas of Science
 This implies that for a majority of scholarly articles, the referenced web content could become inaccessible over time,
 and their content could drift away from the original, both of which are detrimental to the scholarly world and beyond.
 
+**We developed the *Robust PDFLinks* service to proactively combat this problem.
+Through this, one could discover URLs in a PDF document, and preserve a copy of their content in Web Archives before
+they are gone forever.**
 
 .. toctree::
    :maxdepth: 1
