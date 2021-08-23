@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'PDF Links Service'
+project = 'Robust PDFLinks'
 copyright = '2021, Yasith Jayawardana'
 author = 'Yasith Jayawardana'
 

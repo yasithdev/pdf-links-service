@@ -161,9 +161,9 @@ def robustify():
   The ``filename`` is the MD5 hash of an uploaded PDF.
   The ``uris`` is a a subset of URIs from the PDF which should be robustified.
 
-  For each URI, the function calls the Robust Links Service to create a ``URI-R -> URI-M`` mapping.
+  For each URI, the function calls the Robust PDFLinks service to create a ``URI-R -> URI-M`` mapping.
   The HTTP response `streams` each mapping as a JSON blob.
-  The request completes when each URL is processed through the Robust Links Service.
+  The request completes when each URL is processed through the Robust PDFLinks service.
   Upon completion, the generated ``URI-R -> URI-M`` mappings are stored in a file, which can be accessed via ``/mappings/<pdf_hash>``.
   Here, ``pdf_hash`` is the MD5 hash of the corresponding PDF.
 
@@ -371,19 +371,19 @@ def __make_error_response(status: int, message: str):
 
 def __call_robust_links_svc(uri: str):
   """
-  Call the Robust Links Service on a URI, and return the status of its robustification.
+  Call the Robust PDFLinks service on a URI, and return the status of its robustification.
 
   A success response has the following fields.
 
   * ``ok``: always True
-  * ``uri``: The URL which was sent to the Robust Links API
+  * ``uri``: The URL which was sent to the Robust PDFLinks service
   * ``href_uri_r``: Robust Link pointing to the original resource
   * ``href_uri_m``: Robust Link pointing to an archived copy of the original resource (i.e., memento)
 
   An error response has the following fields.
 
   * ``ok``: always False
-  * ``uri``: The URL which was sent to the Robust Links API
+  * ``uri``: The URL which was sent to the Robust PDFLinks service
   * ``error``: A friendly description of the error
 
   :param uri: the URL to robustify

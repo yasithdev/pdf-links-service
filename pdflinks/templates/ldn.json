@@ -11,7 +11,7 @@
       }
     }
   ],
-  "summary": "PDF Links Service Created Robust Link Mappings for {{pdf_name}}",
+  "summary": "Robust PDFLinks service Created Robust Links for {{pdf_name}}",
   "published": "{{published_time}}",
   "dcterms:created": "{{created_time}}",
   "type": [
@@ -20,12 +20,12 @@
   "actor": {
     "id": "{{hostname}}",
     "type": "Service",
-    "name": "PDF Links Service"
+    "name": "Robust PDFLinks"
   },
   "object": {
     "type": "Document",
     "mediaType": "application/json",
-    "name": "Robust Link Mappings for {{pdf_name}}",
+    "name": "Robust Links for {{pdf_name}}",
     "url": "{{hostname}}/mappings/{{pdf_hash}}"
   },
   "origin": {

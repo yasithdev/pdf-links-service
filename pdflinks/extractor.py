@@ -13,13 +13,11 @@ class Extractor:
   """
   The ``Extractor`` class is used to perform URL extraction from PDF documents.
   It uses `PyPDF2 <https://pypi.org/project/PyPDF2/>`_ and `PyPDFIUM <https://pypi.org/project/pypdfium/>`_ for this.
-  Here, PyPDF2 is used to extract URLs from PDF annotations, while PyPDFIUM is used to extract URLs from PDF text
+  Here, PyPDF2 is used to extract URLs from PDF annotations, while PyPDFIUM is used to extract URLs from PDF text.
 
-  When extracting URLs, priority is given to URLs extracted from PDF annotations, as
-  they were found to be more reliable by nature than URLs extracted from PDF text.
-  This is because URLs in PDF text may be extracted
-  partially (e.g., truncated due to a newline character) or
-  with additional characters (e.g., with unwanted letters from the sentence following a URL).
+  When extracting URLs, priority is given to URLs from PDF annotations, as they were found less error-prone than URLs from PDF text.
+  This is because URLs in PDF text may be extracted partially (e.g., truncated due to a newline character) or with
+  additional characters (e.g., with unwanted letters from the sentence following a URL).
 
   """
 
