@@ -23,6 +23,9 @@ Here are some interesting facts about scholarly articles in the areas of Science
 1. *One in five* scholarly articles suffer from *reference rot* `[1] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0115253>`_
 2. *Three in four* scholarly articles suffer from *content drift* `[2] <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0167475>`_
 
+This implies that for a majority of scholarly articles, the referenced web content could become inaccessible over time,
+and their content could drift away from the original, both of which are detrimental to the scholarly world and beyond.
+
 
 .. toctree::
    :maxdepth: 1
