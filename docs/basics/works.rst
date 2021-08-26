@@ -23,4 +23,3 @@ Upon generating the LDN, the user can send it to that LD server.
 
 Moreover, the user can preview the PDF and its robust links on a separate page.
 This page uses the Robust Links CSS/JS to facilitate opening either the original resource or an archived snapshot (i.e., memento) of it.
-

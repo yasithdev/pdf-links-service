@@ -1,5 +1,5 @@
 Link Extractor
-==============
+--------------
 
 This module is responsible for extracting URI references from PDF documents.
 It uses two libraries to perform this.

@@ -1,5 +1,6 @@
+===============
 Robust PDFLinks
-================
+===============
 
 The `Robust PDFLinks </>`_ service allows you to extract links from PDF documents, "robustify" them, notify the
 availability of robust links via Linked Data (LD) Notifications, and preview the PDF with its robust links.
@@ -9,8 +10,7 @@ availability of robust links via Linked Data (LD) Notifications, and preview the
    :width: 600
 
 
-Why "Robustify" Links in PDFs?
----------------------------------------
+**Why "Robustify" Links in PDFs?**
 
 Links to the web can break over time, in two forms:
 
@@ -30,10 +30,13 @@ and their content could drift away from the original, both of which are detrimen
 Through this, one could discover URLs in a PDF document, and preserve a copy of their content in Web Archives before
 they are gone forever.**
 
-.. toctree::
-   :maxdepth: 1
 
-   usage
-   howitworks
-   setup
-   api/index
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+
+   basics/works
+   basics/usage
+   basics/setup
+   code/index

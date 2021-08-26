@@ -1,5 +1,5 @@
 Errors
-======
+------
 
 This module contains the errors that can be raised when parsing URLs.
 
