@@ -8,6 +8,12 @@ from .errors import URLError
 
 
 class Util:
+  """
+  The ``Util`` class is a collection of helper functions to process URL (or URL-like) strings.
+  It provides functions to validate whether URL-like strings are actually URLs, transform URL strings
+  into canonical formats, and to filter out duplicates from URL collections.
+
+  """
 
   def __init__(self) -> None:
     base_dir = os.path.dirname(os.path.realpath(__file__))
