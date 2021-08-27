@@ -21,9 +21,11 @@ Running the Service Locally
 
    # (optional) create docs (HTML)
    make html
+   # running this command will generate HTML in the 'docs/_build/html' folder
 
-   # (optional) create docs (PDF)
+   # (optional) create docs (PDF) - requires 'latex' command to be in '$PATH'
    make latexpdf
+   # running this command will generate a PDF in the 'docs/_build/latex' folder
 
    # start the service
    make
