@@ -4,12 +4,12 @@ from typing import Set
 
 import validators
 
-from .errors import URLError
+from pdflinks.errors import URLError
 
 
-class Util:
+class URLUtil:
   """
-  The ``Util`` class is a collection of helper functions to process URL (or URL-like) strings.
+  The ``URLUtil`` class is a collection of helper functions to process URL (or URL-like) strings.
   It provides functions to validate whether URL-like strings are actually URLs, transform URL strings
   into canonical formats, and to filter out duplicates from URL collections.
 
@@ -18,7 +18,7 @@ class Util:
   def __init__(self) -> None:
     base_dir = os.path.dirname(os.path.realpath(__file__))
     # load blacklisted URLs as regex, for validation
-    with open(f"{base_dir}/config/blacklist.txt") as f:
+    with open(f"{base_dir}/../config/blacklist.txt") as f:
       self.blacklist = re.compile("|".join(sorted(map(str.strip, f.readlines()))), re.I)
 
   def canonicalize_url(self, url: str) -> str:
@@ -86,7 +86,7 @@ class Util:
     """
     uniq_urls = set()
     for url in sorted(pool, key=len, reverse=prefer_long):
-      if not Util.has_match(url, uniq_urls):
+      if not URLUtil.has_match(url, uniq_urls):
         uniq_urls.add(url)
     return uniq_urls
 
@@ -100,4 +100,4 @@ class Util:
     :return: a subset of URLs
 
     """
-    return set(url for url in pool if not Util.has_match(url, ignore_list))
+    return set(url for url in pool if not URLUtil.has_match(url, ignore_list))

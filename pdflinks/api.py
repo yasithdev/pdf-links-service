@@ -1,5 +1,4 @@
 import concurrent.futures
-import datetime
 import hashlib
 import io
 import json
@@ -9,25 +8,15 @@ import flask
 import requests
 
 from .extractor import Extractor
+from .util import APIUtil
 
 app = flask.Flask(__name__)
 app.config['UPLOADS_FOLDER'] = './pdfs'
 app.config['MAPPING_FOLDER'] = './mappings'
 app.config['DOCS_FOLDER'] = '../docs/_build/html'
 extractor = Extractor()
+util = APIUtil(app)
 executor = concurrent.futures.ThreadPoolExecutor(5)
-
-ERR_TITLE = "Error!"
-ERR_REQ_NOT_JSON = "Expected JSON payload"
-ERR_PDF_NOT_FOUND = "The requested PDF file was not found"
-ERR_PDF_META_NOT_FOUND = "The metadata for the requested PDF file was not found. Please try uploading the PDF again to generate metadata."
-ERR_MAPPING_NOT_FOUND = "This PDF does not have any saved URI-R > URI-M mappings"
-ERR_ONLY_PDF_ALLOWED = "You are only allowed to upload PDF files"
-ERR_MALFORMED_LDN = "The LDN is malformed"
-ERR_MISSING_PARAM_FILE = "Missing required parameter 'file'"
-ERR_MISSING_PARAM_LD_SERVER_URL = "Missing required parameter 'ld_server_url'"
-ERR_MISSING_PARAM_PDF_URL = "Missing required query parameter 'pdf_url'"
-ERR_MISSING_PARAM_MAPPING_URL = "Missing required query parameter 'mapping_url'"
 
 
 @app.route('/pdfs', methods=['POST'])
@@ -50,13 +39,13 @@ def upload_pdf():
 
   # assert that request contains a file
   if 'file' not in flask.request.files:
-    return flask.abort(__make_error_response(400, ERR_MISSING_PARAM_FILE))
+    return flask.abort(util.make_error_res(400, util.ERR_MISSING_PARAM_FILE))
   # get file from the request
   file = flask.request.files['file']
   orig_filename = file.filename
   # ensure that the file is a pdf
   if file.mimetype != 'application/pdf':
-    return flask.abort(__make_error_response(400, ERR_ONLY_PDF_ALLOWED))
+    return flask.abort(util.make_error_res(400, util.ERR_ONLY_PDF_ALLOWED))
   # copy the PDF into an in-memory buffer
   data = io.BytesIO()
   data.write(file.stream.read())
@@ -94,7 +83,7 @@ def get_pdf(pdf_hash: str):
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
-    return flask.abort(__make_error_response(404, ERR_PDF_NOT_FOUND))
+    return flask.abort(util.make_error_res(404, util.ERR_PDF_NOT_FOUND))
   # send file
   return flask.send_file(pdf_path)
 
@@ -117,7 +106,7 @@ def get_extracted_links_page(pdf_hash: str):
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
-    return flask.abort(__make_error_response(404, ERR_PDF_NOT_FOUND))
+    return flask.abort(util.make_error_res(404, util.ERR_PDF_NOT_FOUND))
   # extracts links from PDF
   urls = extractor.extract_all_urls(pdf_path)
   # send extracted links
@@ -142,11 +131,11 @@ def get_mappings(pdf_hash: str):
   # assert that PDF exists
   pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
   if not os.path.exists(pdf_path):
-    return flask.abort(__make_error_response(404, ERR_PDF_NOT_FOUND))
+    return flask.abort(util.make_error_res(404, util.ERR_PDF_NOT_FOUND))
   # assert that mappings exist
   mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
   if not os.path.exists(mapping_path):
-    return flask.abort(__make_error_response(404, ERR_MAPPING_NOT_FOUND))
+    return flask.abort(util.make_error_res(404, util.ERR_MAPPING_NOT_FOUND))
   # send mappings
   return flask.send_file(mapping_path)
 
@@ -183,7 +172,7 @@ def robustify():
     try:
       # submit robustification requests
       for uri in uris:
-        futures.append(executor.submit(__call_robust_links_svc, uri.strip()))
+        futures.append(executor.submit(util.call_robust_links_svc, uri.strip()))
       # process each future as completed
       for future in concurrent.futures.as_completed(futures):
         payload = future.result()
@@ -222,11 +211,11 @@ def get_ldn_json(pdf_hash: str):
   """
 
   # get LD server URL from query params
-  ld_server_url = __get_ld_server_url_from_query_params()
+  ld_server_url = util.get_ld_server_url_from_query_params()
   # resolve LDP inbox URL from LD server
-  ldp_inbox_url = __resolve_ldp_inbox_url(ld_server_url)
+  ldp_inbox_url = util.resolve_ldp_inbox_url(ld_server_url)
   # generate LDN payload
-  return __generate_ldn_payload(pdf_hash, ld_server_url, ldp_inbox_url)
+  return util.generate_ldn_payload(pdf_hash, ld_server_url, ldp_inbox_url)
 
 
 @app.route("/ldn/<pdf_hash>", methods=['POST'])
@@ -246,11 +235,11 @@ def send_ldn(pdf_hash: str):
   """
 
   # get LD server URL from request body
-  ld_server_url = __get_ld_server_url_from_request_body()
+  ld_server_url = util.get_ld_server_url_from_req_payload()
   # resolve LDP inbox URL from LD server
-  ldp_inbox_url = __resolve_ldp_inbox_url(ld_server_url)
+  ldp_inbox_url = util.resolve_ldp_inbox_url(ld_server_url)
   # generate LDN payload
-  ldn_payload = __generate_ldn_payload(pdf_hash, ld_server_url, ldp_inbox_url).get_json()
+  ldn_payload = util.generate_ldn_payload(pdf_hash, ld_server_url, ldp_inbox_url).get_json()
   # send LDN payload to LDP inbox of LD server
   res = requests.post(ldp_inbox_url, json=ldn_payload, headers={'Content-Type': 'application/ld+json'})
   # proxy response from LD server
@@ -271,13 +260,13 @@ def request_ldn_preview():
 
   """
   # get request body as JSON
-  ldn_payload = __get_request_body_as_json()
+  ldn_payload = util.get_req_payload_as_json()
   # get PDF url and mapping URL from LDN payload
   try:
     pdf_url = ldn_payload['origin']['url']
     mapping_url = ldn_payload['object']['url']
   except KeyError:
-    return flask.abort(__make_error_response(400, ERR_MALFORMED_LDN))
+    return flask.abort(util.make_error_res(400, util.ERR_MALFORMED_LDN))
   return flask.redirect(f"/preview?pdf_url={pdf_url}&mapping_url={mapping_url}")
 
 
@@ -297,9 +286,9 @@ def get_ldn_preview():
   # get query params
   params = flask.request.args
   if 'pdf_url' not in params:
-    return flask.abort(__make_error_response(400, ERR_MISSING_PARAM_PDF_URL))
+    return flask.abort(util.make_error_res(400, util.ERR_MISSING_PARAM_PDF_URL))
   if 'mapping_url' not in params:
-    return flask.abort(__make_error_response(400, ERR_MISSING_PARAM_MAPPING_URL))
+    return flask.abort(util.make_error_res(400, util.ERR_MISSING_PARAM_MAPPING_URL))
   pdf_url = params.get('pdf_url')
   mapping_url = params.get('mapping_url')
   return flask.render_template("preview.html", pdf_url=pdf_url, mappings_url=mapping_url)
@@ -343,211 +332,3 @@ def get_docs_page(path: str):
 
   """
   return flask.send_from_directory(app.config['DOCS_FOLDER'], path)
-
-
-def __make_error_response(status: int, message: str):
-  """
-  Generate an error response.
-
-  If the request accepts HTML, the error will be rendered as a HTML page.
-  Instead, if the request accepts JSON, the error will be rendered as JSON.
-  If neither, the error will be rendered as plain text.
-
-  :param status: HTTP status code
-  :param message: Message included in the error response
-  :return: An HTTP response with the given status and message
-
-  """
-
-  mimes = flask.request.accept_mimetypes
-  if mimes.accept_html:
-    body = flask.render_template('error.html', title=ERR_TITLE, message=message)
-  elif mimes.accept_json:
-    body = {"ok": False, "timestamp": datetime.datetime.utcnow().isoformat(), "error": message}
-  else:
-    body = message
-  return flask.make_response(body, status)
-
-
-def __call_robust_links_svc(uri: str):
-  """
-  Call the Robust PDFLinks service on a URI, and return the status of its robustification.
-
-  A success response has the following fields.
-
-  * ``ok``: always True
-  * ``uri``: The URL which was sent to the Robust PDFLinks service
-  * ``href_uri_r``: Robust Link pointing to the original resource
-  * ``href_uri_m``: Robust Link pointing to an archived copy of the original resource (i.e., memento)
-
-  An error response has the following fields.
-
-  * ``ok``: always False
-  * ``uri``: The URL which was sent to the Robust PDFLinks service
-  * ``error``: A friendly description of the error
-
-  :param uri: the URL to robustify
-  :return: the status of robustification
-
-  """
-
-  # log the function call
-  app.logger.info(f"Submitted request to RL service for URL: {uri}")
-
-  # send the request
-  params = {"url": uri, "anchor_text": uri}
-  headers = {"Accept": "application/json"}
-  res = requests.get(f"http://robustlinks.mementoweb.org/api/", params=params, headers=headers)
-
-  def error_res(__errmsg: str):
-    app.logger.warn(__errmsg)
-    return {"ok": False, "uri": uri, "error": __errmsg}
-
-  def success_res(__rl: any, __uri_r_key='original_url_as_href', __uri_m_key='memento_url_as_href'):
-    app.logger.info(f"RL service robustified URL: {uri}")
-    return {"ok": True, "uri": uri, "href_uri_r": minify(__rl[__uri_r_key]), "href_uri_m": minify(__rl[__uri_m_key])}
-
-  def minify(html: str):
-    return html.replace('\n', '').strip()
-
-  try:
-    # try converting response to JSON
-    res_json: dict = res.json()
-  except json.JSONDecodeError:
-    # if the response is not JSON
-    return error_res(f"RL service returned HTTP {res.status_code} with a non JSON response for URI: {uri}")
-  else:
-    # if the response is JSON
-    if 'robust_links_html' in res_json:
-      # handle responses with 'robust_links_html'
-      return success_res(res_json['robust_links_html'])
-    elif 'friendly error' in res_json:
-      # handle responses with 'friendly error'
-      errmsg = res_json['friendly error'].strip()
-      return error_res(f"RL service returned HTTP {res.status_code} for URI: {uri}. Message: {errmsg}")
-    else:
-      # handle responses that do not have the expected fields
-      return error_res(f"RL service returned HTTP {res.status_code} with an unknown JSON response for URI: {uri}")
-
-
-def __generate_ldn_payload(pdf_hash: str, ld_server_url: str, ldp_inbox_url: str):
-  """
-  Generate an LDN payload for a PDF, given the ``pdf_hash``, ``ld_server_url``, and ``ldp_inbox_url``.
-
-  This function checks if the PDF exists and if not, returns a ``400 Bad Request`` HTTP response.
-  Next, it checks if the PDF metadata exists and if not, returns a ``400 Bad Request`` HTTP response.
-  Upon doing so, it gets the original PDF name from the metadata.
-
-  Next, it checks if URI-R -> URI-M mappings exists for the PDF and if not, returns a ``400 Bad Request`` HTTP response.
-  Upon doing so, it gets the last modified time of the URI-R -> URI-M mappings.
-  Using this information, it generates the LDN payload and returns it with a ``200 OK`` HTTP response.
-
-  :param pdf_hash: MD5 hash of an uploaded PDF
-  :param ld_server_url: URL of the Linked Data (LD) Server
-  :param ldp_inbox_url: URL of the LDP inbox of the given LD Server
-  :return: An LDN as a JSON response
-
-  """
-  # assert that PDF exists
-  pdf_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf")
-  if not os.path.exists(pdf_path):
-    return flask.abort(__make_error_response(404, ERR_PDF_NOT_FOUND))
-  # assert that PDF metadata exists
-  pdf_meta_path = os.path.join(app.config['UPLOADS_FOLDER'], pdf_hash + ".pdf.txt")
-  if not os.path.exists(pdf_meta_path):
-    return flask.abort(__make_error_response(404, ERR_PDF_META_NOT_FOUND))
-  # get the original pdf name from metadata
-  with open(pdf_meta_path) as f:
-    pdf_name = f.readline()
-  # assert that the URI-R -> URI-M mappings exist for the PDF
-  mapping_path = os.path.join(app.config['MAPPING_FOLDER'], pdf_hash + ".pdf.json")
-  if not os.path.exists(mapping_path):
-    return flask.abort(__make_error_response(404, ERR_MAPPING_NOT_FOUND))
-  # last modified time of the URI-R -> URI-M mappings
-  mapping_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(mapping_path)).isoformat()
-  # generate LDN payload
-  ldn_args = {
-    'hostname': flask.request.host_url.strip(' /'),
-    'pdf_hash': pdf_hash,
-    'pdf_name': pdf_name,
-    'created_time': datetime.datetime.now().isoformat(),
-    'published_time': mapping_mtime,
-    'ld_server_url': ld_server_url,
-    'ldp_inbox_url': ldp_inbox_url
-  }
-  payload = flask.render_template("ldn.json", **ldn_args)
-  # return LDN payload as JSON
-  return flask.jsonify(flask.json.loads(payload))
-
-
-def __get_request_body_as_json():
-  """
-  Parse the request body as JSON, and return the parsed object.
-
-  If the body cannot be parsed as JSON, it returns a ``400 Bad Request`` HTTP response.
-
-  :return: Parsed Request body as an object
-
-  """
-  try:
-    # try generating JSON from request body
-    return flask.request.get_json()
-  except json.JSONDecodeError:
-    # if body is not JSON, abort request
-    return flask.abort(__make_error_response(400, ERR_REQ_NOT_JSON))
-
-
-def __get_ld_server_url_from_request_body(key='ld_server_url'):
-  """
-  Parse the request body as JSON, and return the LD server URL given in it.
-
-  If the body cannot be parsed as JSON, or if ``key`` does not exist, it returns a ``400 Bad Request`` HTTP response.
-
-  :param key: Key to extract from request body (default='ld_server_url`)
-  :return: The LD Server URL given in the request body
-
-  """
-  # get request body as JSON
-  req_json = __get_request_body_as_json()
-  # assert that LD server URL exists in request body
-  if key not in req_json:
-    return flask.abort(__make_error_response(400, ERR_MISSING_PARAM_LD_SERVER_URL))
-  return req_json[key]
-
-
-def __get_ld_server_url_from_query_params(key='ld_server_url'):
-  """
-  Parse the request query params and return the LD server URL given in it.
-
-  If ``key`` does not exist in the request query params, it returns a ``400 Bad Request`` HTTP response.
-
-  :param key: Key to extract from request query params (default='ld_server_url`)
-  :return: The LD Server URL given in the request query params
-
-  """
-  # assert that LD server URL exists in request query params
-  if key not in flask.request.args:
-    return flask.abort(__make_error_response(400, ERR_MISSING_PARAM_LD_SERVER_URL))
-  # return LD server URL from request query params
-  return flask.request.args.get(key)
-
-
-def __resolve_ldp_inbox_url(ld_server_url: str):
-  """
-  Return the URL of the LDP inbox of the Linked Data (LD) service found at the ``ld_server_url``.
-
-  This function performs a HEAD request to the ``ld_server_url``, and parses the link headers of the response.
-  If a LDP inbox URL is found in the link header, it returns it.
-  If not found, it returns a ``400 Bad Request`` HTTP response.
-
-  :param ld_server_url: URL of the Linked Data (LD) server
-  :return: The URL of the LDP inbox of the LD server
-
-  """
-  # Send HTTP HEAD request to LD Server URL
-  res = requests.head(ld_server_url)
-  # Get LDP Inbox URL from Link Header
-  ldn_inbox_rel = "http://www.w3.org/ns/ldp#inbox"
-  if ldn_inbox_rel not in res.links:
-    return flask.abort(__make_error_response(400, f"The URL {ld_server_url} is not an LD Server"))
-  return res.links[ldn_inbox_rel]['url']

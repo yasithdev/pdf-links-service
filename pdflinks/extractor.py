@@ -6,7 +6,7 @@ import PyPDF2.pdf
 import pypdfium
 
 from .errors import URLError
-from .util import Util
+from .util import URLUtil
 
 
 class Extractor:
@@ -22,7 +22,7 @@ class Extractor:
   """
 
   def __init__(self):
-    self.util = Util()
+    self.util = URLUtil()
 
   def extract_annot_urls(self, fp: str) -> Set[str]:
     """
